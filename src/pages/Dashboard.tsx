@@ -44,7 +44,7 @@ const Dashboard = () => {
   }, [id]);
 
   const pilotUrl = `${window.location.origin}/pilot/${id}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pilotUrl)}&bgcolor=0a0a0a&color=d4a843`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pilotUrl)}&bgcolor=0a0a0a&color=ffffff`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(pilotUrl);

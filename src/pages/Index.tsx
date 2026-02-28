@@ -15,6 +15,7 @@ const quickLinks = [
 const Index = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,6 +25,7 @@ const Index = () => {
 
     setUrl(finalUrl);
     setLoading(true);
+    setCompleted(false);
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate`,
@@ -43,15 +45,20 @@ const Index = () => {
       }
 
       const data = await response.json();
-      navigate(`/dashboard/${data.pilot_id}`);
+
+      // Show completion state briefly before navigating
+      setCompleted(true);
+      setTimeout(() => {
+        navigate(`/dashboard/${data.pilot_id}`);
+      }, 800);
     } catch (err: any) {
       toast({
         title: "Error",
         description: err.message || "Something went wrong",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
+      setCompleted(false);
     }
   };
 
@@ -91,7 +98,7 @@ const Index = () => {
         </div>
 
         {loading ? (
-          <GenerationProgress isActive={loading} />
+          <GenerationProgress isActive={loading} isComplete={completed} />
         ) : (
           <>
             {/* Form */}
