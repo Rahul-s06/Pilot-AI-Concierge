@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           agent_id: string
           brand_name: string
+          catalog_summary: string | null
           created_at: string
           id: string
           source_url: string
@@ -25,6 +26,7 @@ export type Database = {
         Insert: {
           agent_id: string
           brand_name: string
+          catalog_summary?: string | null
           created_at?: string
           id?: string
           source_url: string
@@ -32,6 +34,7 @@ export type Database = {
         Update: {
           agent_id?: string
           brand_name?: string
+          catalog_summary?: string | null
           created_at?: string
           id?: string
           source_url?: string

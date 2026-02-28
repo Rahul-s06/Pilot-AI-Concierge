@@ -60,7 +60,65 @@ serve(async (req) => {
       console.error("Failed to scrape URL via Firecrawl:", e);
     }
 
-    // 2. Generate concierge system prompt via Lovable AI
+    // 2. Discover and scrape product catalog pages via Firecrawl Map
+    let catalogContent = "";
+    try {
+      console.log("Mapping product URLs via Firecrawl:", url);
+      const mapRes = await fetch("https://api.firecrawl.dev/v1/map", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          search: "product",
+          limit: 10,
+          includeSubdomains: false,
+        }),
+      });
+
+      const mapData = await mapRes.json();
+      const productUrls: string[] = (mapData.links || []).slice(0, 10);
+      console.log(`Found ${productUrls.length} product URLs`);
+
+      if (productUrls.length > 0) {
+        const scrapePromises = productUrls.map(async (productUrl: string) => {
+          const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: productUrl,
+              formats: ["markdown"],
+              onlyMainContent: true,
+            }),
+          });
+          const data = await res.json();
+          const md = data.data?.markdown || data.markdown || "";
+          return md.substring(0, 500);
+        });
+
+        const results = await Promise.allSettled(scrapePromises);
+        const chunks: string[] = [];
+        let totalLen = 0;
+        for (const r of results) {
+          if (r.status === "fulfilled" && r.value) {
+            if (totalLen + r.value.length > 4000) break;
+            chunks.push(r.value);
+            totalLen += r.value.length;
+          }
+        }
+        catalogContent = chunks.join("\n\n---\n\n");
+        console.log(`Catalog content collected: ${catalogContent.length} chars from ${chunks.length} pages`);
+      }
+    } catch (e) {
+      console.error("Catalog scraping failed (non-fatal):", e);
+    }
+
+    // 3. Generate concierge system prompt via Lovable AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -82,7 +140,7 @@ serve(async (req) => {
             },
             {
               role: "user",
-              content: `Create a luxury voice concierge system prompt for this brand:\n\nBrand: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand, and helpful. Keep it under 500 words.`,
+              content: `Create a luxury voice concierge system prompt for this brand:\n\nBrand: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep it under 500 words.`,
             },
           ],
         }),
@@ -156,6 +214,7 @@ serve(async (req) => {
         brand_name: pageTitle,
         source_url: url,
         agent_id: agentId,
+        catalog_summary: catalogContent || null,
       })
       .select()
       .single();
