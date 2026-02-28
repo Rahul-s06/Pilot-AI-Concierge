@@ -1,52 +1,55 @@
-## Current Limitations
 
-Right now the generate function:
 
-- Scrapes the homepage: **2000 chars** (often just navigation and hero text)
-- Maps 10 product URLs but only keeps **500 chars each** (barely a product name and price)
-- Total catalog context: ~4000 chars baked into the system prompt
-- The agent **cannot look up new information** during a conversation
+## Plan: Improve Voice Concierge UX
 
-This means if a customer asks "Do you have this bag in blue?" or "What's the price of X?", the agent will likely hallucinate or give a vague answer.
+### 1. Don't reset chat on mic toggle
+**File:** `src/pages/Pilot.tsx`
+- Remove `setTranscript([])` from `startConversation` (line 74) so the transcript persists across connect/disconnect cycles
 
-## Two Options
+### 2. Improve chat readability
+**File:** `src/pages/Pilot.tsx`
+- Restyle transcript as chat bubbles: agent messages left-aligned with a subtle card background, user messages right-aligned with a different style
+- Increase padding, spacing, and font size for better scanning
+- Add role label above each bubble instead of inline
 
-### Option A: Scrape More Upfront (Quick Win)
+### 3. Isolate user's voice
+**File:** `src/pages/Pilot.tsx`
+- Pass `{ audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true } }` to `navigator.mediaDevices.getUserMedia()` to filter background noise
 
-Increase the data captured during generation so the agent starts with richer knowledge. No architectural changes.
+### 4. Send product link when user is happy
+This requires two changes:
 
-**Changes to `supabase/functions/generate/index.ts`:**
+**File:** `src/pages/Pilot.tsx`
+- Add `source_url` to the `PilotData` interface
+- Register a `clientTools` handler called `send_product_link` on the `useConversation` hook. When the agent calls this tool, it appends a special "link" entry to the transcript with a clickable URL
+- Add a new transcript entry type for links, rendered as a styled clickable button/card
 
-- Increase homepage content from 2000 to 4000 chars
-- Increase per-product page content from 500 to 1500 chars
-- Increase total catalog cap from 4000 to 12000 chars
-- Increase product URL limit from 10 to 20
-- Increase system prompt word limit from 500 to 1500 words
+**File:** `supabase/functions/generate/index.ts`
+- Add a client tool definition to the ElevenLabs agent creation call so the agent knows it can call `send_product_link` when the user expresses interest
+- Update the system prompt instruction to tell the agent to use the `send_product_link` tool when the user seems ready to purchase or wants to see a product page
 
-Trade-off: Longer generation time, larger system prompt (higher ElevenLabs token cost per conversation), but much better product knowledge.
+### Technical Detail: ElevenLabs Client Tools
 
-### Option B: Give the Agent Live Lookup (More Powerful)
+The agent creation body will include a `tools` array with a client tool:
+```text
+conversation_config.agent.tools = [{
+  type: "client",
+  name: "send_product_link",
+  description: "Send a product link to the user when they want to see or buy a product",
+  parameters: {
+    type: "object",
+    properties: {
+      url: { type: "string", description: "The product page URL" },
+      product_name: { type: "string", description: "Name of the product" }
+    },
+    required: ["url", "product_name"]
+  }
+}]
+```
 
-Use ElevenLabs' **custom tool/webhook** feature so the agent can call your backend mid-conversation to scrape a specific product page on demand.
+On the frontend, `clientTools.send_product_link` will inject a clickable link card into the transcript.
 
-**New edge function `supabase/functions/agent-lookup/index.ts`:**
+### Files Changed
+- `src/pages/Pilot.tsx` — all four changes
+- `supabase/functions/generate/index.ts` — client tool + prompt update
 
-- Accepts a product query from the ElevenLabs agent webhook
-- Uses Firecrawl search to find the relevant page on the brand's site
-- Scrapes that page and returns structured product info
-- The agent gets fresh, detailed data for exactly what the user asked about
-
-**Changes to `supabase/functions/generate/index.ts`:**
-
-- Store the `source_url` domain in the agent config
-- Add a `tools` configuration to the ElevenLabs agent creation call, registering the lookup webhook
-
-This is significantly more impressive for demos -- the concierge can answer about ANY product, not just the 10 it scraped upfront. But it adds ~2-3 seconds of latency per lookup.
-
-## Recommendation
-
-**Option A is a 15-minute improvement** that makes the existing concierge noticeably smarter. Option B is a bigger lift but makes the product genuinely useful. They're not mutually exclusive -- doing A first and B later is a solid path.
-
-&nbsp;
-
-I think option A is better
