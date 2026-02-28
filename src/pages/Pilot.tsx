@@ -88,11 +88,13 @@ const Pilot = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [latestLink, setLatestLink] = useState<{ url: string; product_name: string } | null>(null);
+  const [micMuted, setMicMuted] = useState(false);
   const { toast } = useToast();
   const transcriptEnd = useRef<HTMLDivElement>(null);
   const entryId = useRef(0);
 
   const conversation = useConversation({
+    micMuted,
     onConnect: () => console.log("Connected to ElevenLabs agent"),
     onDisconnect: () => console.log("Disconnected from agent"),
     onError: (err) => console.error("Conversation error:", err),
@@ -176,6 +178,10 @@ const Pilot = () => {
     }
   }, [conversation, pilot, id]);
 
+  const toggleMute = useCallback(() => {
+    setMicMuted((prev) => !prev);
+  }, []);
+
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
   }, [conversation]);
@@ -241,15 +247,17 @@ const Pilot = () => {
           )}
 
           <button
-            onClick={isConnected ? stopConversation : startConversation}
+            onClick={isConnected ? toggleMute : startConversation}
             disabled={isConnecting}
             className={`relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center transition-all duration-300 ${
               isConnected
-                ? "bg-primary text-primary-foreground scale-110 glow-gold"
+                ? micMuted
+                  ? "bg-destructive text-destructive-foreground scale-105"
+                  : "bg-primary text-primary-foreground scale-110 glow-gold"
                 : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground hover:scale-105 animate-breathe"
             } ${isConnecting ? "animate-pulse-gold" : ""}`}
           >
-            {isConnected ? (
+            {isConnected && micMuted ? (
               <MicOff className="w-8 h-8 sm:w-10 sm:h-10" />
             ) : (
               <Mic className="w-8 h-8 sm:w-10 sm:h-10" />
@@ -261,7 +269,9 @@ const Pilot = () => {
           {isConnecting ? (
             "Connecting…"
           ) : isConnected ? (
-            isSpeaking ? (
+            micMuted ? (
+              "Mic muted — tap to resume"
+            ) : isSpeaking ? (
               "Concierge is speaking…"
             ) : (
               <>
