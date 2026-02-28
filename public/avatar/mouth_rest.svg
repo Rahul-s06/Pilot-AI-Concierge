@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40" fill="none">
-  <defs>
-    <linearGradient id="lipGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#c4877a"/>
-      <stop offset="100%" stop-color="#a06858"/>
-    </linearGradient>
-  </defs>
-  <path d="M22 20 Q40 23 58 20" stroke="url(#lipGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-</svg>

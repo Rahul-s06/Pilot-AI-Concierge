@@ -5,9 +5,3 @@ verify_jwt = false
 
 [functions.pilot-data]
 verify_jwt = false
-
-[functions.chat]
-verify_jwt = false
-
-[functions.tts]
-verify_jwt = false

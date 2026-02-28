@@ -1,77 +1,73 @@
-# Pilot — AI Voice Concierge
+# Welcome to your Lovable project
 
-Turn any website into a voice-powered AI concierge with lip-synced avatar responses.
+## Project info
 
-🔗 **[Live Demo](https://web-concierge-ai.lovable.app)**
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-## Features
+## How can I edit this code?
 
-- **URL-to-Agent Generation** — Paste a URL, and the system scrapes & summarizes the brand catalog to create a custom AI concierge
-- **AI Chat** — Context-aware conversation powered by OpenAI with brand-specific system prompts
-- **TTS Lip-Sync Avatar** — ElevenLabs text-to-speech with real-time amplitude-based mouth animation
-- **Voice Input** — Hands-free interaction via Web Speech API (speech → text → AI → TTS → avatar)
-- **Captions (CC)** — Optional floating subtitles during avatar speech
-- **Stop Control** — Cancel AI responses or TTS playback at any time
+There are several ways of editing your application.
 
-## Tech Stack
+**Use Lovable**
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite, TypeScript, Tailwind CSS |
-| UI Components | shadcn/ui, Radix primitives |
-| Backend | Lovable Cloud (Edge Functions) |
-| AI | OpenAI (chat completions) |
-| TTS | ElevenLabs |
-| Voice Input | Web Speech API |
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-## Architecture
+Changes made via Lovable will be committed automatically to this repo.
 
-### Pages
+**Use your preferred IDE**
 
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page — paste a URL to generate a new concierge agent |
-| `/dashboard/:id` | Generation progress & result dashboard |
-| `/pilot/:id` | Live voice concierge interface with avatar |
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-### Backend Functions
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-| Function | Purpose |
-|----------|---------|
-| `generate` | Scrapes a URL, summarizes content, creates a pilot record |
-| `chat` | Sends user message + brand context to OpenAI, returns AI reply |
-| `tts` | Converts AI text to speech audio via ElevenLabs |
-| `pilot-data` | Fetches pilot record (brand name, catalog summary, etc.) |
-
-## Getting Started
+Follow these steps:
 
 ```sh
-# Clone the repository
+# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Install dependencies
-npm install
+# Step 3: Install the necessary dependencies.
+npm i
 
-# Create a .env file with the required variables (see below)
-cp .env.example .env
-
-# Start development server
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-### Environment Variables
+**Edit a file directly in GitHub**
 
-Create a `.env` file in the project root with:
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-| Variable | Description |
-|----------|-------------|
-| `VITE_SUPABASE_URL` | Backend API URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Backend public/anon key |
-| `VITE_SUPABASE_PROJECT_ID` | Backend project identifier |
+**Use GitHub Codespaces**
 
-> **Note:** In production, Lovable Cloud provides these automatically. The `.env` file is only needed for local development. **Do not commit `.env` to version control.**
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## License
+## What technologies are used for this project?
 
-MIT
+This project is built with:
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
