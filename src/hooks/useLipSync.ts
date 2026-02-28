@@ -65,7 +65,7 @@ export function useLipSync() {
       sum += v * v;
     }
     const rms = Math.sqrt(sum / dataArray.length);
-    const amplitude = Math.min(rms * 3, 1); // amplify
+    const amplitude = Math.min(rms * 1.5, 0.8); // subtle, realistic
 
     setCurrentMouth(amplitudeToMouth(amplitude));
     animFrameRef.current = requestAnimationFrame(animateAmplitude);
@@ -84,31 +84,10 @@ export function useLipSync() {
     animFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const tryRhubarb = useCallback(async (audioBuffer: ArrayBuffer): Promise<MouthCue[] | null> => {
-    try {
-      const { Rhubarb } = await import("rhubarb-lip-sync-wasm");
-
-      // Decode MP3 to PCM
-      const ctx = new AudioContext();
-      const decoded = await ctx.decodeAudioData(audioBuffer.slice(0));
-      const pcmData = decoded.getChannelData(0);
-      const pcmBuffer = Buffer.from(pcmData.buffer);
-
-      const result = await Rhubarb.getLipSync(pcmBuffer);
-      console.log("Rhubarb cue count:", result?.mouthCues?.length ?? 0);
-
-      if (result?.mouthCues?.length) {
-        return result.mouthCues.map((c: any) => ({
-          start: c.start,
-          end: c.end,
-          value: mapCue(c.value),
-        }));
-      }
-      return null;
-    } catch (err) {
-      console.warn("Rhubarb WASM unavailable, using amplitude fallback:", err);
-      return null;
-    }
+  const tryRhubarb = useCallback(async (_audioBuffer: ArrayBuffer): Promise<MouthCue[] | null> => {
+    // Rhubarb WASM is not browser-compatible (uses Node.js APIs).
+    // Using amplitude-based fallback instead.
+    return null;
   }, []);
 
   const speak = useCallback(async (audioArrayBuffer: ArrayBuffer) => {

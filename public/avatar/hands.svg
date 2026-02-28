@@ -1,18 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
-  <!-- Left hand -->
+  <defs>
+    <radialGradient id="handGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#f0d5b8"/>
+      <stop offset="100%" stop-color="#c09870"/>
+    </radialGradient>
+  </defs>
+  <!-- Left hand - elegant gesture -->
   <g transform="translate(20, 40)">
-    <path d="M30 160 Q35 100 40 60 Q42 40 38 20 Q36 10 40 5 Q44 0 48 10 Q52 30 50 60" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <path d="M50 60 Q52 35 55 15 Q57 5 60 3 Q64 0 66 8 Q68 20 65 45 Q63 60 60 70" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <path d="M60 70 Q62 45 65 25 Q67 15 70 12 Q74 8 76 16 Q78 30 75 55 Q73 70 70 80" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <path d="M70 80 Q72 60 74 45 Q76 35 79 32 Q82 28 84 35 Q86 45 83 65 Q80 80 78 90" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <ellipse cx="55" cy="120" rx="30" ry="45" fill="#e0b890"/>
+    <path d="M30 160 Q35 100 40 60 Q42 40 38 20 Q36 10 40 5 Q44 0 48 10 Q52 30 50 60" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <path d="M50 60 Q52 35 55 15 Q57 5 60 3 Q64 0 66 8 Q68 20 65 45 Q63 60 60 70" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <path d="M60 70 Q62 45 65 25 Q67 15 70 12 Q74 8 76 16 Q78 30 75 55 Q73 70 70 80" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <path d="M70 80 Q72 60 74 45 Q76 35 79 32 Q82 28 84 35 Q86 45 83 65 Q80 80 78 90" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <ellipse cx="55" cy="120" rx="30" ry="45" fill="url(#handGrad)"/>
   </g>
   <!-- Right hand (mirrored) -->
   <g transform="translate(100, 40) scale(-1,1) translate(-80,0)">
-    <path d="M30 160 Q35 100 40 60 Q42 40 38 20 Q36 10 40 5 Q44 0 48 10 Q52 30 50 60" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <path d="M50 60 Q52 35 55 15 Q57 5 60 3 Q64 0 66 8 Q68 20 65 45 Q63 60 60 70" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <path d="M60 70 Q62 45 65 25 Q67 15 70 12 Q74 8 76 16 Q78 30 75 55 Q73 70 70 80" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <path d="M70 80 Q72 60 74 45 Q76 35 79 32 Q82 28 84 35 Q86 45 83 65 Q80 80 78 90" stroke="#d4a574" stroke-width="2" fill="#e0b890"/>
-    <ellipse cx="55" cy="120" rx="30" ry="45" fill="#e0b890"/>
+    <path d="M30 160 Q35 100 40 60 Q42 40 38 20 Q36 10 40 5 Q44 0 48 10 Q52 30 50 60" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <path d="M50 60 Q52 35 55 15 Q57 5 60 3 Q64 0 66 8 Q68 20 65 45 Q63 60 60 70" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <path d="M60 70 Q62 45 65 25 Q67 15 70 12 Q74 8 76 16 Q78 30 75 55 Q73 70 70 80" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <path d="M70 80 Q72 60 74 45 Q76 35 79 32 Q82 28 84 35 Q86 45 83 65 Q80 80 78 90" stroke="#c09870" stroke-width="1.5" fill="url(#handGrad)"/>
+    <ellipse cx="55" cy="120" rx="30" ry="45" fill="url(#handGrad)"/>
   </g>
 </svg>
