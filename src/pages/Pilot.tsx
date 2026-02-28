@@ -4,7 +4,7 @@ import { useConversation } from "@elevenlabs/react";
 import { Mic, MicOff, ExternalLink, ShoppingBag } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { getPilotSettings, buildPersonalityPrompt } from "@/lib/pilot-settings";
+// Personality settings are saved in-memory on Dashboard; overrides require agent-level config on ElevenLabs
 
 interface PilotData {
   pilot_id: string;
@@ -157,20 +157,9 @@ const Pilot = () => {
         },
       });
 
-      // Build personality override from saved settings
-      const settings = getPilotSettings(id);
-      const personalityPrompt = buildPersonalityPrompt(settings);
-
       await conversation.startSession({
         agentId: pilot.agent_id,
         connectionType: "webrtc",
-        overrides: {
-          agent: {
-            prompt: {
-              prompt: personalityPrompt,
-            },
-          },
-        },
       });
     } catch (err: any) {
       console.error("Failed to start:", err);
