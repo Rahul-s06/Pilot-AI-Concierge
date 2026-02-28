@@ -1,32 +1,25 @@
 
 
-## Plan: Improve Concierge Page & Fix Home Spacing
+## Improvements to Consider
 
-### 1. Fix Home Page Spacing
+### 1. Fix Inconsistent Branding
+- **`src/pages/Pilot.tsx` line 206**: Footer still says "Pilot.ai" — should be "Pilot" to match the home page
+- **`src/pages/Dashboard.tsx` line 79**: Header still says "Pilot.ai" with a Mic emoji — should be just "Pilot" with no icon, matching the home page
 
-In `src/pages/Index.tsx`, the `space-y-2` on the header div creates tight spacing between "voice concierge" and the subtitle. Change to `space-y-4` and increase the top-level `space-y-12` to `space-y-10` for better balance. Also add `mt-6` to the subtitle paragraph for more breathing room after the headline.
+### 2. Dashboard — Staggered Entry Animations
+The dashboard loads all at once. Add staggered `animate-fade-in` with increasing `animationDelay` to the header, stats, QR code, and action buttons so they cascade in sequentially.
 
-### 2. Redesign Concierge (Pilot) Page
+### 3. Error Handling on Pilot Page
+When microphone permission is denied, nothing visible happens — the error only logs to console. Show a toast notification telling the user to allow microphone access.
 
-In `src/pages/Pilot.tsx`, make these visual improvements:
+### 4. Concierge Page — Visual Volume Indicator
+Replace the static "Listening…" text with a small animated waveform (reuse the existing `.animate-waveform` CSS) so the user has visual feedback that the mic is active, even when the agent isn't speaking.
 
-- **Larger mic button**: Increase from `w-20 h-20` / `w-24 h-24` to `w-28 h-28` / `w-32 h-32` -- this is the hero element
-- **Subtle outer ring**: Add a static faint ring around the mic button (border with low opacity) that's always visible, giving it more presence even before connecting
-- **Smoother idle state**: Add a gentle breathing animation (`animate-pulse` with custom slower timing) on the mic button when disconnected
-- **Better connected state glow**: Increase the ambient background glow size and intensity when speaking
-- **Refined transcript area**: Add a subtle gradient fade at the top of the transcript scroll area, increase the height, and use slightly larger text
-- **Brand identity at top**: Style the brand name with the gold gradient and make it slightly larger
-- **"Powered by Pilot.ai" footer**: Add a subtle footer link back to home
-- **Status text styling**: Make the status text ("Tap to begin", "Listening...", "Speaking...") slightly larger with better visual hierarchy
-
-### 3. CSS Additions
-
-In `src/index.css`:
-- Add a `@keyframes breathe` animation (subtle scale 1 to 1.03 and back) for the idle mic button
-- Add `.animate-breathe` utility class
+### 5. Home Page — Auto-prepend https://
+If the user types a URL without `https://`, auto-prepend it before submitting so the form doesn't reject bare domains like `gucci.com`.
 
 ### Files Changed
-- `src/pages/Index.tsx` -- spacing fix
-- `src/pages/Pilot.tsx` -- visual redesign
-- `src/index.css` -- breathing animation
+- `src/pages/Pilot.tsx` — branding fix, mic error toast, waveform indicator
+- `src/pages/Dashboard.tsx` — branding fix, staggered animations
+- `src/pages/Index.tsx` — URL auto-prepend
 
