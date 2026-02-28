@@ -1,0 +1,1 @@
+ALTER TABLE public.pilots ADD COLUMN catalog_summary text;
