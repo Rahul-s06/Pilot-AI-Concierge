@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, QrCode, Eye, Mic, ExternalLink, Copy, Check, Globe, Package } from "lucide-react";
+import { CheckCircle, QrCode, Eye, ExternalLink, Copy, Check, Globe, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PilotData {
@@ -73,10 +73,9 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
       <div className="max-w-md w-full text-center space-y-8 animate-fade-in">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fade-in">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body tracking-[0.3em] uppercase">
-            <Mic className="w-4 h-4 text-primary" />
-            Pilot.ai
+            Pilot
           </Link>
 
           <div className="flex items-center justify-center gap-2 text-primary">
@@ -88,7 +87,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center justify-center gap-6 text-sm font-body">
+        <div className="flex items-center justify-center gap-6 text-sm font-body animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <a
             href={pilot.source_url}
             target="_blank"
@@ -108,7 +107,7 @@ const Dashboard = () => {
         </div>
 
         {/* QR Code */}
-        <div className="bg-card border border-border rounded-lg p-8 glow-gold">
+        <div className="bg-card border border-border rounded-lg p-8 glow-gold animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <div className="flex items-center justify-center gap-2 mb-4 text-muted-foreground">
             <QrCode className="w-4 h-4" />
             <span className="text-xs font-body uppercase tracking-widest">Scan to connect</span>
@@ -121,7 +120,7 @@ const Dashboard = () => {
         </div>
 
         {/* Actions */}
-        <div className="space-y-3">
+        <div className="space-y-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>
           <Button asChild size="lg" className="w-full h-12 font-body">
             <Link to={`/pilot/${id}`}>
               <Eye className="w-4 h-4 mr-2" />

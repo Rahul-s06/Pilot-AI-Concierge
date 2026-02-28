@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Mic } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import GenerationProgress from "@/components/GenerationProgress";
 
@@ -20,8 +20,11 @@ const Index = () => {
   const { toast } = useToast();
 
   const handleGenerate = async (targetUrl?: string) => {
-    const finalUrl = targetUrl || url.trim();
+    let finalUrl = targetUrl || url.trim();
     if (!finalUrl) return;
+    if (!/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = `https://${finalUrl}`;
+    }
 
     setUrl(finalUrl);
     setLoading(true);
