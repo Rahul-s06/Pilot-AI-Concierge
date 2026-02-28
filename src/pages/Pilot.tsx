@@ -4,6 +4,7 @@ import { useConversation } from "@elevenlabs/react";
 import { Mic, MicOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 interface PilotData {
   pilot_id: string;
@@ -24,6 +25,7 @@ const Pilot = () => {
   const [error, setError] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+  const { toast } = useToast();
   const transcriptEnd = useRef<HTMLDivElement>(null);
   const entryId = useRef(0);
 
@@ -76,8 +78,13 @@ const Pilot = () => {
         agentId: pilot.agent_id,
         connectionType: "webrtc",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to start:", err);
+      toast({
+        title: "Microphone access required",
+        description: "Please allow microphone access in your browser settings to use the voice concierge.",
+        variant: "destructive",
+      });
     } finally {
       setIsConnecting(false);
     }
@@ -160,15 +167,30 @@ const Pilot = () => {
           </button>
         </div>
 
-        <p className="text-base sm:text-lg text-muted-foreground font-body font-light">
-          {isConnecting
-            ? "Connecting…"
-            : isConnected
-            ? isSpeaking
-              ? "Concierge is speaking…"
-              : "Listening…"
-            : "Tap to begin"}
-        </p>
+        <div className="text-base sm:text-lg text-muted-foreground font-body font-light flex items-center justify-center gap-2">
+          {isConnecting ? (
+            "Connecting…"
+          ) : isConnected ? (
+            isSpeaking ? (
+              "Concierge is speaking…"
+            ) : (
+              <>
+                <div className="flex items-center gap-[2px] h-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-[2px] bg-primary/50 rounded-full animate-waveform"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+                Listening…
+              </>
+            )
+          ) : (
+            "Tap to begin"
+          )}
+        </div>
 
         {/* Live transcript */}
         {transcript.length > 0 && (
@@ -203,7 +225,7 @@ const Pilot = () => {
           to="/"
           className="inline-block text-xs text-muted-foreground/50 font-body hover:text-muted-foreground transition-colors"
         >
-          Powered by <span className="text-gold-gradient">Pilot.ai</span>
+          Powered by <span className="text-gold-gradient">Pilot</span>
         </Link>
       </div>
     </div>
