@@ -21,7 +21,7 @@ serve(async (req) => {
       });
     }
 
-    // 1. Fetch homepage
+    // 1. Fetch homepage metadata
     let pageTitle = "Brand";
     let metaDescription = "";
     try {
@@ -41,7 +41,7 @@ serve(async (req) => {
       console.error("Failed to fetch URL:", e);
     }
 
-    // 2. Generate concierge prompt via Lovable AI
+    // 2. Generate concierge system prompt via Lovable AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -80,9 +80,50 @@ serve(async (req) => {
     const systemPrompt =
       aiData.choices?.[0]?.message?.content || "You are a helpful concierge.";
 
-    // 3. Mock ElevenLabs agent (real integration removed temporarily)
-    console.log("Running in MOCK ElevenLabs mode");
-    const agentId = "test_agent_" + Math.random().toString(36).substring(7);
+    // 3. Create REAL ElevenLabs conversational agent
+    console.log("Using Lovable ElevenLabs connection - REAL MODE");
+
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY_1");
+    if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY_1 not configured");
+
+    const agentRes = await fetch(
+      "https://api.elevenlabs.io/v1/convai/agents/create",
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `Concierge - ${pageTitle}`,
+          conversation_config: {
+            agent: {
+              prompt: {
+                prompt: systemPrompt,
+              },
+              first_message: `Welcome to ${pageTitle}. How may I assist you today?`,
+              language: "en",
+            },
+          },
+        }),
+      }
+    );
+
+    if (!agentRes.ok) {
+      const errBody = await agentRes.text();
+      console.error("ElevenLabs agent creation error:", agentRes.status, errBody);
+      throw new Error(`Failed to create agent: ${agentRes.status}`);
+    }
+
+    const agentData = await agentRes.json();
+    const agentId = agentData.agent_id;
+
+    if (!agentId) {
+      console.error("No agent_id in response:", JSON.stringify(agentData));
+      throw new Error("No agent_id returned from ElevenLabs");
+    }
+
+    console.log("Real ElevenLabs agent created:", agentId);
 
     // 4. Store in database
     const supabase = createClient(
