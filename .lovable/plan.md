@@ -1,14 +1,25 @@
-## Answers & Plan
 
-### 1. README Update for Hackathon
 
-Replace the default Lovable boilerplate with a proper project README:
+## Problem
 
-**File: `README.md**`
+The ElevenLabs `send_product_link` client tool is not reliably triggered by the agent during conversations. The user needs a guaranteed way to navigate to the product/store page.
 
-- Project name: **Pilot** -- Turn any website into an AI voice concierge
-- What it does: Paste a URL, Pilot scrapes the site, builds a brand-aware AI voice agent with product knowledge, and gives you a shareable link + QR code
-- How it works: Firecrawl scraping → AI prompt generation → ElevenLabs voice agent creation → Live WebRTC voice conversation with product link sharing
-- Tech stack: React, TypeScript, Tailwind CSS, Lovable Cloud, Firecrawl, ElevenLabs Conversational AI, Lovable AI
-- Live demo link: `https://web-concierge-ai.lovable.app`
-- Key features list: one-click generation, voice conversation, product link sharing, QR code sharing
+## Solution
+
+Add an always-visible "Visit Store" button on the Pilot page that uses the `source_url` already available from pilot data. Keep the existing client tool infrastructure for when it does fire, but don't depend on it.
+
+## Changes
+
+### 1. `src/pages/Pilot.tsx`
+- Add a permanent "Visit [Brand] Store" button below the mic/transcript area that links to `pilot.source_url`
+- Premium styling: black background, white text, large rounded-full, hover animation, glow effect
+- Always visible once the pilot data loads (no dependency on agent tool calls)
+- Keep existing `clientTools.send_product_link` and `latestLink` logic so if the agent does send a specific product URL, that button takes priority over the generic store button
+
+### 2. `supabase/functions/pilot-data/index.ts`
+- No changes needed -- `source_url` is already returned
+
+## Result
+
+Users always see a clickable button to visit the brand's website. If the agent happens to send a specific product link via the tool, the button updates to show that specific product instead.
+
