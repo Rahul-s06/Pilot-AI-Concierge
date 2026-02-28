@@ -71,9 +71,8 @@ const Index = () => {
         {/* Logo */}
         <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <Mic className="w-5 h-5 text-primary" />
             <span className="text-sm font-body tracking-[0.3em] uppercase text-muted-foreground">
-              Pilot.ai
+              Pilot
             </span>
           </div>
 
