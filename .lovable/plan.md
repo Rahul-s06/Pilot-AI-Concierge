@@ -1,58 +1,50 @@
-## Making Pilot.ai Demo-Impressive
+## Improvements to Make Pilot.ai More Impressive
 
-The app works end-to-end but currently feels like a prototype. Here's a focused plan to make it demo-ready across all three screens.
+The landing page and dashboard look solid. Here are focused improvements across the remaining screens.
 
-### 1. Landing Page -- Animated Generation Flow
+### 1. Pilot Voice Page -- Animated Pulse Rings
 
-**Problem**: After clicking "Generate Pilot", the user stares at a spinning icon for 15-30 seconds with no feedback.
+Add concentric pulse rings around the mic button that animate outward when the concierge is speaking. This makes the voice interaction feel alive and immersive.
 
-**Fix**: Replace the simple spinner with a multi-step progress animation that shows what's happening behind the scenes:
+**Changes to `src/pages/Pilot.tsx`:**
 
-- Step 1: "Scanning website..." (with animated dots)
-- Step 2: "Discovering products..." 
-- Step 3: "Building concierge personality..."
-- Step 4: "Creating voice agent..."
+- Add 2-3 expanding/fading ring divs behind the mic button that animate when `isSpeaking` is true
+- Smoother state transitions with opacity/scale on the button itself
 
-This turns the wait into a compelling demo moment. Implement as a modal overlay or inline state replacement with smooth transitions.
+**Changes to `src/index.css`:**
 
-### 2. Landing Page -- Polish
+- Add a `@keyframes pulse-ring` animation that scales up and fades out
 
-- Add a subtle animated sound wave or waveform graphic near the headline to reinforce the "voice" concept
-- Add 2-3 example brand logos or "Try it with" quick-links (e.g., gucci.com, stripe.com) so the demo presenter can click instead of typing
-- Smooth entrance animations with staggered delays
+### 2. Pilot Voice Page -- Live Transcript
 
-### 3. Dashboard Page -- Richer Post-Generation View
+Show a scrolling transcript below the mic button with user and agent messages. Uses the existing ElevenLabs `onMessage` callback -- no new dependencies.
 
-**Current**: Shows brand name, QR code, agent ID, and a preview button. Feels sparse.
+**Changes to `src/pages/Pilot.tsx`:**
 
-**Improvements**:
+- Add `onMessage` handler to `useConversation` to capture transcript entries
+- Render a small scrollable transcript area below the status text
+- Style user messages vs agent messages differently (left/right or different opacity)
 
-- Show the scraped brand info (source URL as a clickable link)
-- Display "Products discovered: X pages scraped" from catalog_summary
-- Add a share/copy link button for the pilot URL
-- Better visual hierarchy with the QR code
+### 3. Landing Page -- Smoother Generation Completion
 
-### 4. Pilot (Voice) Page -- Immersive Experience
+When generation finishes, add a brief "Done!" state with a checkmark before navigating to the dashboard, so the transition feels intentional rather than abrupt.
 
-**Current**: Minimal mic button with status text. Functional but flat.
+**Changes to `src/pages/Index.tsx`:**
 
-**Improvements**:
+- After successful generation, show a "Pilot ready!" state for ~800ms before navigating
 
-- Add a subtle brand name display at the top
-- Smoother transition animations between states (disconnected -> connecting -> connected -> speaking)
+**Changes to `src/components/GenerationProgress.tsx`:**
 
-### 5. Brand Name Cleanup
+- Add a final "complete" state with all steps checked
 
-Extract a clean brand name from the scraped title (strip "Official Site", "UK", etc.) using the AI prompt or simple heuristics. Currently shows "GUCCI® UK Official Site | Celebrate Italian Heritage" instead of just "Gucci".
+### 4. Mobile Responsiveness Pass
 
-### Implementation Order (prioritized for demo impact)
+Ensure the pilot voice page and dashboard look great on phone screens since QR codes will often be scanned on mobile.
 
-1. **Animated generation progress** -- biggest demo moment, highest impact
-2. **Quick-try links on landing page** -- removes friction during live demo
-3. **Brand name cleanup** -- small but noticeable polish
-4. **Dashboard enrichment** -- secondary screen, lower priority
+**Changes to `src/pages/Pilot.tsx` and `src/pages/Dashboard.tsx`:**
 
-### Technical Notes
+- Verify spacing, font sizes, and button sizes work on small viewports
 
-- The generation progress steps will use Server-Sent Events (SSE) from the edge function, or simulated timed steps on the client if SSE adds too much complexity
-- Brand name cleanup can be done in the AI prompt by asking it to also return a short brand name, or via a simple regex strip of common suffixes
+&nbsp;
+
+Also change the colour of the QR code from yellow to white
