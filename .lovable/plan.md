@@ -1,25 +1,52 @@
+## Current Limitations
 
+Right now the generate function:
 
-## Improvements to Consider
+- Scrapes the homepage: **2000 chars** (often just navigation and hero text)
+- Maps 10 product URLs but only keeps **500 chars each** (barely a product name and price)
+- Total catalog context: ~4000 chars baked into the system prompt
+- The agent **cannot look up new information** during a conversation
 
-### 1. Fix Inconsistent Branding
-- **`src/pages/Pilot.tsx` line 206**: Footer still says "Pilot.ai" — should be "Pilot" to match the home page
-- **`src/pages/Dashboard.tsx` line 79**: Header still says "Pilot.ai" with a Mic emoji — should be just "Pilot" with no icon, matching the home page
+This means if a customer asks "Do you have this bag in blue?" or "What's the price of X?", the agent will likely hallucinate or give a vague answer.
 
-### 2. Dashboard — Staggered Entry Animations
-The dashboard loads all at once. Add staggered `animate-fade-in` with increasing `animationDelay` to the header, stats, QR code, and action buttons so they cascade in sequentially.
+## Two Options
 
-### 3. Error Handling on Pilot Page
-When microphone permission is denied, nothing visible happens — the error only logs to console. Show a toast notification telling the user to allow microphone access.
+### Option A: Scrape More Upfront (Quick Win)
 
-### 4. Concierge Page — Visual Volume Indicator
-Replace the static "Listening…" text with a small animated waveform (reuse the existing `.animate-waveform` CSS) so the user has visual feedback that the mic is active, even when the agent isn't speaking.
+Increase the data captured during generation so the agent starts with richer knowledge. No architectural changes.
 
-### 5. Home Page — Auto-prepend https://
-If the user types a URL without `https://`, auto-prepend it before submitting so the form doesn't reject bare domains like `gucci.com`.
+**Changes to `supabase/functions/generate/index.ts`:**
 
-### Files Changed
-- `src/pages/Pilot.tsx` — branding fix, mic error toast, waveform indicator
-- `src/pages/Dashboard.tsx` — branding fix, staggered animations
-- `src/pages/Index.tsx` — URL auto-prepend
+- Increase homepage content from 2000 to 4000 chars
+- Increase per-product page content from 500 to 1500 chars
+- Increase total catalog cap from 4000 to 12000 chars
+- Increase product URL limit from 10 to 20
+- Increase system prompt word limit from 500 to 1500 words
 
+Trade-off: Longer generation time, larger system prompt (higher ElevenLabs token cost per conversation), but much better product knowledge.
+
+### Option B: Give the Agent Live Lookup (More Powerful)
+
+Use ElevenLabs' **custom tool/webhook** feature so the agent can call your backend mid-conversation to scrape a specific product page on demand.
+
+**New edge function `supabase/functions/agent-lookup/index.ts`:**
+
+- Accepts a product query from the ElevenLabs agent webhook
+- Uses Firecrawl search to find the relevant page on the brand's site
+- Scrapes that page and returns structured product info
+- The agent gets fresh, detailed data for exactly what the user asked about
+
+**Changes to `supabase/functions/generate/index.ts`:**
+
+- Store the `source_url` domain in the agent config
+- Add a `tools` configuration to the ElevenLabs agent creation call, registering the lookup webhook
+
+This is significantly more impressive for demos -- the concierge can answer about ANY product, not just the 10 it scraped upfront. But it adds ~2-3 seconds of latency per lookup.
+
+## Recommendation
+
+**Option A is a 15-minute improvement** that makes the existing concierge noticeably smarter. Option B is a bigger lift but makes the product genuinely useful. They're not mutually exclusive -- doing A first and B later is a solid path.
+
+&nbsp;
+
+I think option A is better
