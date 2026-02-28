@@ -87,6 +87,7 @@ const Pilot = () => {
   const [error, setError] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+  const [latestLink, setLatestLink] = useState<{ url: string; product_name: string } | null>(null);
   const { toast } = useToast();
   const transcriptEnd = useRef<HTMLDivElement>(null);
   const entryId = useRef(0);
@@ -96,6 +97,7 @@ const Pilot = () => {
     onDisconnect: () => console.log("Disconnected from agent"),
     onError: (err) => console.error("Conversation error:", err),
     onMessage: (message) => {
+      console.log("onMessage received:", JSON.stringify(message));
       const role = message.source === "user" ? "user" : "agent";
       setTranscript((prev) => [
         ...prev,
@@ -104,16 +106,16 @@ const Pilot = () => {
     },
     clientTools: {
       send_product_link: (params: { url: string; product_name: string }) => {
-        setTranscript((prev) => [
-          ...prev,
-          {
-            role: "link" as const,
-            text: params.product_name,
-            url: params.url,
-            product_name: params.product_name,
-            id: entryId.current++,
-          },
-        ]);
+        console.log("send_product_link called with:", JSON.stringify(params));
+        const linkEntry = {
+          role: "link" as const,
+          text: params.product_name,
+          url: params.url,
+          product_name: params.product_name,
+          id: entryId.current++,
+        };
+        setTranscript((prev) => [...prev, linkEntry]);
+        setLatestLink({ url: params.url, product_name: params.product_name });
         return "Link sent to the user";
       },
     },
@@ -292,6 +294,22 @@ const Pilot = () => {
                 <div ref={transcriptEnd} />
               </div>
             </ScrollArea>
+          </div>
+        )}
+
+        {/* Prominent action button for latest product link */}
+        {latestLink && (
+          <div className="animate-fade-in">
+            <a
+              href={latestLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 w-full bg-foreground text-background font-body font-medium text-base px-8 py-4 rounded-full hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 glow-gold"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              View {latestLink.product_name || "Product"}
+              <ExternalLink className="w-4 h-4" />
+            </a>
           </div>
         )}
 
