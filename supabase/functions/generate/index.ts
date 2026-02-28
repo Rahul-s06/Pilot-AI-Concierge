@@ -51,7 +51,7 @@ serve(async (req) => {
 
         if (metadata?.title) pageTitle = metadata.title;
         if (metadata?.description) metaDescription = metadata.description;
-        pageContent = markdown.substring(0, 2000); // First 2000 chars for context
+        pageContent = markdown.substring(0, 4000); // First 4000 chars for context
         console.log("Firecrawl scrape successful, brand:", pageTitle);
       } else {
         console.error("Firecrawl scrape failed:", JSON.stringify(scrapeData));
@@ -73,13 +73,13 @@ serve(async (req) => {
         body: JSON.stringify({
           url,
           search: "product",
-          limit: 10,
+          limit: 20,
           includeSubdomains: false,
         }),
       });
 
       const mapData = await mapRes.json();
-      const productUrls: string[] = (mapData.links || []).slice(0, 10);
+      const productUrls: string[] = (mapData.links || []).slice(0, 20);
       console.log(`Found ${productUrls.length} product URLs`);
 
       if (productUrls.length > 0) {
@@ -98,7 +98,7 @@ serve(async (req) => {
           });
           const data = await res.json();
           const md = data.data?.markdown || data.markdown || "";
-          return md.substring(0, 500);
+          return md.substring(0, 1500);
         });
 
         const results = await Promise.allSettled(scrapePromises);
@@ -106,7 +106,7 @@ serve(async (req) => {
         let totalLen = 0;
         for (const r of results) {
           if (r.status === "fulfilled" && r.value) {
-            if (totalLen + r.value.length > 4000) break;
+            if (totalLen + r.value.length > 12000) break;
             chunks.push(r.value);
             totalLen += r.value.length;
           }
@@ -140,7 +140,7 @@ serve(async (req) => {
             },
             {
               role: "user",
-              content: `Create a luxury voice concierge system prompt for this brand:\n\nRaw Title: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep the system_prompt under 500 words. For brand_name, extract just the clean brand name (e.g. "Gucci" not "GUCCI® UK Official Site | Celebrate Italian Heritage").`,
+              content: `Create a luxury voice concierge system prompt for this brand:\n\nRaw Title: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep the system_prompt under 1500 words. For brand_name, extract just the clean brand name (e.g. "Gucci" not "GUCCI® UK Official Site | Celebrate Italian Heritage").`,
             },
           ],
         }),
