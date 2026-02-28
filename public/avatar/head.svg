@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" fill="none">
+  <!-- Neck -->
+  <rect x="120" y="320" width="60" height="80" rx="20" fill="#d4a574"/>
+  <!-- Head shape -->
+  <ellipse cx="150" cy="180" rx="110" ry="140" fill="#e0b890"/>
+  <!-- Hair -->
+  <ellipse cx="150" cy="120" rx="115" ry="100" fill="#3a2a1a"/>
+  <rect x="35" y="120" width="230" height="20" rx="10" fill="#3a2a1a"/>
+  <!-- Eyes -->
+  <ellipse cx="105" cy="190" rx="14" ry="10" fill="white"/>
+  <ellipse cx="195" cy="190" rx="14" ry="10" fill="white"/>
+  <ellipse cx="107" cy="191" rx="7" ry="7" fill="#2c1810"/>
+  <ellipse cx="197" cy="191" rx="7" ry="7" fill="#2c1810"/>
+  <circle cx="109" cy="188" r="2.5" fill="white"/>
+  <circle cx="199" cy="188" r="2.5" fill="white"/>
+  <!-- Eyebrows -->
+  <path d="M82 172 Q105 162 128 172" stroke="#3a2a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M172 172 Q195 162 218 172" stroke="#3a2a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M145 210 Q150 230 155 210" stroke="#c09870" stroke-width="2" fill="none"/>
+  <!-- Ears -->
+  <ellipse cx="40" cy="195" rx="12" ry="20" fill="#d4a574"/>
+  <ellipse cx="260" cy="195" rx="12" ry="20" fill="#d4a574"/>
+</svg>
