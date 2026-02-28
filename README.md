@@ -1,73 +1,63 @@
-# Welcome to your Lovable project
+# 🛩️ Pilot — Turn Any Website into an AI Voice Concierge
 
-## Project info
+Paste a URL. Pilot scrapes the site, builds a brand-aware AI voice agent with full product knowledge, and gives you a shareable link + QR code — all in under a minute.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+🔗 **Live Demo:** [web-concierge-ai.lovable.app](https://web-concierge-ai.lovable.app)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## How It Works
 
-**Use Lovable**
+1. **Paste a URL** — Enter any product or brand website
+2. **AI Scraping** — Firecrawl extracts content, products, and brand voice
+3. **Agent Generation** — Lovable AI builds a tailored system prompt; ElevenLabs creates a voice agent
+4. **Live Conversation** — Users talk to the concierge via WebRTC; it answers questions and sends product links in real time
+5. **Share** — Get a unique link + QR code to embed or share anywhere
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Key Features
 
-Changes made via Lovable will be committed automatically to this repo.
+- ⚡ **One-click generation** — URL in, voice agent out
+- 🎙️ **Real-time voice conversation** — WebRTC-powered, low-latency
+- 🔗 **Product link sharing** — Agent sends clickable links when users show interest
+- 📱 **QR code sharing** — Instant shareable access to any concierge
+- 🧠 **Brand-aware AI** — Matches tone, knows the catalog, stays on-brand
 
-**Use your preferred IDE**
+## Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React, TypeScript, Tailwind CSS, Vite |
+| Backend | Lovable Cloud (Edge Functions) |
+| Scraping | [Firecrawl](https://firecrawl.dev) |
+| Voice AI | [ElevenLabs Conversational AI](https://elevenlabs.io) (WebRTC) |
+| Prompt Generation | Lovable AI |
+| Database | Lovable Cloud |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Architecture
 
-Follow these steps:
+```
+User enters URL
+      ↓
+  Firecrawl scrapes site content
+      ↓
+  Lovable AI generates brand-aware system prompt
+      ↓
+  ElevenLabs creates voice agent with client tools
+      ↓
+  User has live voice conversation
+      ↓
+  Agent sends product links when user is interested
+```
+
+## Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+cd pilot
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## License
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT
