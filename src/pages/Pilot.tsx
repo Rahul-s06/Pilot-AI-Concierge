@@ -31,21 +31,18 @@ const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
           rel="noopener noreferrer"
           className="block max-w-[85%] group overflow-hidden"
         >
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors cursor-pointer">
             <p className="text-[11px] uppercase tracking-wider text-primary/60 font-medium mb-1.5">
               Product Link
             </p>
-            <p className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors">
+            <p className="text-sm sm:text-base font-medium text-primary underline underline-offset-2 decoration-primary/40 group-hover:decoration-primary transition-colors">
               {entry.product_name || entry.text}
             </p>
-          </div>
-          {/* Premium action button */}
-          <div className="mt-2 flex justify-center">
-            <span className="inline-flex items-center gap-2 bg-foreground text-background font-body font-medium text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
-              <ShoppingBag className="w-4 h-4" />
+            <div className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-primary/70">
+              <ShoppingBag className="w-3.5 h-3.5" />
               View Product
-              <ExternalLink className="w-3.5 h-3.5" />
-            </span>
+              <ExternalLink className="w-3 h-3" />
+            </div>
           </div>
         </a>
       </div>
