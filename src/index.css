@@ -99,4 +99,13 @@
   .animate-pulse-ring {
     animation: pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
   }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
 }

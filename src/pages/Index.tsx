@@ -69,7 +69,7 @@ const Index = () => {
 
       <div className="relative z-10 max-w-2xl w-full text-center space-y-12">
         {/* Logo */}
-        <div className="space-y-2 animate-fade-in">
+        <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-6">
             <Mic className="w-5 h-5 text-primary" />
             <span className="text-sm font-body tracking-[0.3em] uppercase text-muted-foreground">
@@ -92,7 +92,7 @@ const Index = () => {
             Turn your website into a{" "}
             <span className="text-gold-gradient">voice concierge</span>
           </h1>
-          <p className="text-lg text-muted-foreground font-body font-light mt-4 max-w-md mx-auto">
+          <p className="text-lg text-muted-foreground font-body font-light mt-6 max-w-md mx-auto">
             Paste your URL. We'll create a luxury AI voice agent for your brand in seconds.
           </p>
         </div>
