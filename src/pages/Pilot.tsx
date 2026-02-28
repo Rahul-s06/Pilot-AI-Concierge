@@ -15,6 +15,9 @@ const Pilot = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
+  const [mockResponse, setMockResponse] = useState("");
+
+  const isTestMode = pilot?.agent_id?.startsWith("test_agent_");
 
   const conversation = useConversation({
     onConnect: () => console.log("Connected to agent"),
@@ -64,6 +67,12 @@ const Pilot = () => {
     await conversation.endSession();
   }, [conversation]);
 
+  const handleMockStart = () => {
+    setMockResponse(
+      `Hello, welcome to ${pilot?.brand_name}. How may I assist you today?`
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -80,12 +89,60 @@ const Pilot = () => {
     );
   }
 
+  // Test mode UI
+  if (isTestMode) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[150px] pointer-events-none" />
+
+        <div className="relative z-10 text-center space-y-10 max-w-sm w-full">
+          <div className="space-y-2">
+            <p className="text-xs font-body tracking-[0.3em] uppercase text-muted-foreground">
+              {pilot.brand_name}
+            </p>
+            <h1 className="text-3xl md:text-4xl font-display font-semibold">
+              Speak to your <span className="text-gold-gradient">concierge</span>
+            </h1>
+            <p className="text-sm text-muted-foreground font-body mt-2">
+              Test Mode – ElevenLabs not connected
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-body font-mono">
+              Agent: {pilot.agent_id}
+            </p>
+          </div>
+
+          <button
+            onClick={handleMockStart}
+            className="mx-auto w-full max-w-[240px] h-14 rounded-full flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:scale-105 font-body font-medium"
+          >
+            <Mic className="w-5 h-5" />
+            Simulate Voice Start
+          </button>
+
+          {mockResponse && (
+            <div className="bg-secondary/50 border border-border rounded-2xl p-6 text-left animate-fade-in">
+              <p className="text-xs text-muted-foreground font-body uppercase tracking-widest mb-3">
+                Concierge
+              </p>
+              <p className="text-foreground font-body text-base leading-relaxed">
+                "{mockResponse}"
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Real ElevenLabs UI
   const isConnected = conversation.status === "connected";
   const isSpeaking = conversation.isSpeaking;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background relative overflow-hidden">
-      {/* Ambient glow when active */}
       {isConnected && (
         <div
           className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[150px] pointer-events-none transition-opacity duration-1000 ${
@@ -104,7 +161,6 @@ const Pilot = () => {
           </h1>
         </div>
 
-        {/* Mic button */}
         <button
           onClick={isConnected ? stopConversation : startConversation}
           disabled={isConnecting}
