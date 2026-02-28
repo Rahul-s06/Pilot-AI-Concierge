@@ -21,24 +21,43 @@ serve(async (req) => {
       });
     }
 
-    // 1. Fetch homepage metadata
+    // 1. Scrape homepage metadata via Firecrawl
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
+
     let pageTitle = "Brand";
     let metaDescription = "";
+    let pageContent = "";
     try {
-      const pageRes = await fetch(url, {
-        headers: { "User-Agent": "PilotAI/1.0" },
+      console.log("Scraping URL via Firecrawl:", url);
+      const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          formats: ["markdown"],
+          onlyMainContent: true,
+        }),
       });
-      const html = await pageRes.text();
 
-      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      if (titleMatch) pageTitle = titleMatch[1].trim();
+      const scrapeData = await scrapeRes.json();
 
-      const descMatch = html.match(
-        /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i
-      );
-      if (descMatch) metaDescription = descMatch[1].trim();
+      if (scrapeRes.ok && scrapeData.success) {
+        const metadata = scrapeData.data?.metadata || scrapeData.metadata;
+        const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
+
+        if (metadata?.title) pageTitle = metadata.title;
+        if (metadata?.description) metaDescription = metadata.description;
+        pageContent = markdown.substring(0, 2000); // First 2000 chars for context
+        console.log("Firecrawl scrape successful, brand:", pageTitle);
+      } else {
+        console.error("Firecrawl scrape failed:", JSON.stringify(scrapeData));
+      }
     } catch (e) {
-      console.error("Failed to fetch URL:", e);
+      console.error("Failed to scrape URL via Firecrawl:", e);
     }
 
     // 2. Generate concierge system prompt via Lovable AI
@@ -63,7 +82,7 @@ serve(async (req) => {
             },
             {
               role: "user",
-              content: `Create a luxury voice concierge system prompt for this brand:\n\nBrand: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand, and helpful. Keep it under 500 words.`,
+              content: `Create a luxury voice concierge system prompt for this brand:\n\nBrand: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand, and helpful. Keep it under 500 words.`,
             },
           ],
         }),
