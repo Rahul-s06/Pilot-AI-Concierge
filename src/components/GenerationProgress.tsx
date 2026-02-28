@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Globe, Package, Brain, Mic, CheckCircle } from "lucide-react";
+import { Globe, Package, Brain, Mic, CheckCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Step {
   label: string;
   icon: React.ReactNode;
-  duration: number; // ms before moving to next
+  duration: number;
 }
 
 const steps: Step[] = [
@@ -17,9 +17,10 @@ const steps: Step[] = [
 
 interface GenerationProgressProps {
   isActive: boolean;
+  isComplete?: boolean;
 }
 
-const GenerationProgress = ({ isActive }: GenerationProgressProps) => {
+const GenerationProgress = ({ isActive, isComplete }: GenerationProgressProps) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ const GenerationProgress = ({ isActive }: GenerationProgressProps) => {
     let timeout: ReturnType<typeof setTimeout>;
 
     const advance = (step: number) => {
-      if (step >= steps.length - 1) return; // stay on last step until done
+      if (step >= steps.length - 1) return;
       timeout = setTimeout(() => {
         setCurrentStep(step + 1);
         advance(step + 1);
@@ -44,6 +45,23 @@ const GenerationProgress = ({ isActive }: GenerationProgressProps) => {
 
   if (!isActive) return null;
 
+  // Completion state
+  if (isComplete) {
+    return (
+      <div className="w-full max-w-md mx-auto space-y-6 animate-fade-in text-center">
+        <div className="flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center animate-scale-in">
+            <Sparkles className="w-8 h-8 text-primary" />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <p className="text-lg font-display font-semibold text-foreground">Pilot ready!</p>
+          <p className="text-sm text-muted-foreground font-body">Redirecting to dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md mx-auto space-y-6 animate-fade-in">
       {/* Animated waveform */}
@@ -52,9 +70,7 @@ const GenerationProgress = ({ isActive }: GenerationProgressProps) => {
           <div
             key={i}
             className="w-1 bg-primary rounded-full animate-waveform"
-            style={{
-              animationDelay: `${i * 0.15}s`,
-            }}
+            style={{ animationDelay: `${i * 0.15}s` }}
           />
         ))}
       </div>
