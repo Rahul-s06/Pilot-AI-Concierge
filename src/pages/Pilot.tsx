@@ -297,21 +297,21 @@ const Pilot = () => {
           </div>
         )}
 
-        {/* Prominent action button for latest product link */}
-        {latestLink && (
-          <div className="animate-fade-in">
-            <a
-              href={latestLink.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full bg-foreground text-background font-body font-medium text-base px-8 py-4 rounded-full hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 glow-gold"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              View {latestLink.product_name || "Product"}
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        )}
+        {/* Always-visible store / product button */}
+        <div className="animate-fade-in">
+          <a
+            href={latestLink ? latestLink.url : pilot.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 w-full bg-foreground text-background font-body font-medium text-base px-8 py-4 rounded-full hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 glow-gold"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            {latestLink
+              ? `View ${latestLink.product_name || "Product"}`
+              : `Visit ${pilot.brand_name} Store`}
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
 
         {/* Powered by footer */}
         <Link
