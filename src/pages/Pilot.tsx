@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useConversation } from "@elevenlabs/react";
-import { Mic, MicOff, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Mic, MicOff, ExternalLink, ShoppingBag } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { getPilotSettings, buildPersonalityPrompt } from "@/lib/pilot-settings";
 
 interface PilotData {
   pilot_id: string;
@@ -29,17 +29,23 @@ const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
           href={entry.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block max-w-[85%] rounded-xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors group"
+          className="block max-w-[85%] group"
         >
-          <p className="text-[11px] uppercase tracking-wider text-primary/60 font-medium mb-1">
-            Product Link
-          </p>
-          <p className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors">
-            {entry.product_name || entry.text}
-          </p>
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
-            <ExternalLink className="w-3 h-3" />
-            <span className="truncate">{entry.url}</span>
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors">
+            <p className="text-[11px] uppercase tracking-wider text-primary/60 font-medium mb-1.5">
+              Product Link
+            </p>
+            <p className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors">
+              {entry.product_name || entry.text}
+            </p>
+          </div>
+          {/* Premium action button */}
+          <div className="mt-2 flex justify-center">
+            <span className="inline-flex items-center gap-2 bg-foreground text-background font-body font-medium text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
+              <ShoppingBag className="w-4 h-4" />
+              View Product
+              <ExternalLink className="w-3.5 h-3.5" />
+            </span>
           </div>
         </a>
       </div>
@@ -50,8 +56,14 @@ const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
 
   return (
     <div className={`flex ${isAgent ? "justify-start" : "justify-end"}`}>
-      <div className={`max-w-[85%] space-y-1`}>
-        <p className={`text-[11px] uppercase tracking-wider font-medium ${isAgent ? "text-primary/60" : "text-muted-foreground/60 text-right"}`}>
+      <div className="max-w-[85%] space-y-1">
+        <p
+          className={`text-[11px] uppercase tracking-wider font-medium ${
+            isAgent
+              ? "text-primary/60"
+              : "text-muted-foreground/60 text-right"
+          }`}
+        >
           {isAgent ? "Concierge" : "You"}
         </p>
         <div
@@ -134,7 +146,7 @@ const Pilot = () => {
   }, [id]);
 
   const startConversation = useCallback(async () => {
-    if (!pilot) return;
+    if (!pilot || !id) return;
     setIsConnecting(true);
     try {
       await navigator.mediaDevices.getUserMedia({
@@ -144,21 +156,34 @@ const Pilot = () => {
           autoGainControl: true,
         },
       });
+
+      // Build personality override from saved settings
+      const settings = getPilotSettings(id);
+      const personalityPrompt = buildPersonalityPrompt(settings);
+
       await conversation.startSession({
         agentId: pilot.agent_id,
         connectionType: "webrtc",
+        overrides: {
+          agent: {
+            prompt: {
+              prompt: personalityPrompt,
+            },
+          },
+        },
       });
     } catch (err: any) {
       console.error("Failed to start:", err);
       toast({
         title: "Microphone access required",
-        description: "Please allow microphone access in your browser settings to use the voice concierge.",
+        description:
+          "Please allow microphone access in your browser settings to use the voice concierge.",
         variant: "destructive",
       });
     } finally {
       setIsConnecting(false);
     }
-  }, [conversation, pilot]);
+  }, [conversation, pilot, id]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
@@ -206,15 +231,21 @@ const Pilot = () => {
           </h1>
         </div>
 
-        {/* Mic button with outer ring and pulse rings */}
+        {/* Mic button */}
         <div className="relative flex items-center justify-center">
           <div className="absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full border border-primary/15" />
 
           {isConnected && isSpeaking && (
             <>
               <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/40 animate-pulse-ring" />
-              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/30 animate-pulse-ring" style={{ animationDelay: "0.6s" }} />
-              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/20 animate-pulse-ring" style={{ animationDelay: "1.2s" }} />
+              <div
+                className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/30 animate-pulse-ring"
+                style={{ animationDelay: "0.6s" }}
+              />
+              <div
+                className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/20 animate-pulse-ring"
+                style={{ animationDelay: "1.2s" }}
+              />
             </>
           )}
 
