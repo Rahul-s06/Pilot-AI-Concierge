@@ -1,1 +1,7 @@
 project_id = "liwnqosoaewvtjzyhmzp"
+
+[functions.generate]
+verify_jwt = false
+
+[functions.pilot-data]
+verify_jwt = false
