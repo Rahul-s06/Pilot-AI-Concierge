@@ -95,7 +95,7 @@ const Index = () => {
             <span className="text-gold-gradient">voice concierge</span>
           </h1>
           <p className="text-lg text-muted-foreground font-body font-light mt-6 max-w-md mx-auto">
-            Paste your URL. We'll create a luxury AI voice agent for your brand in seconds.
+            Paste your URL. We'll create an AI voice agent for your brand in seconds.
           </p>
         </div>
 
