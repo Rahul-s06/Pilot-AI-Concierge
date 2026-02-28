@@ -136,11 +136,11 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You create luxury voice concierge system prompts for brands. Return ONLY the system prompt text, nothing else.",
+                "You create luxury voice concierge system prompts for brands. You also extract a clean, short brand name. Return a JSON object with two keys: \"system_prompt\" (the concierge prompt text) and \"brand_name\" (just the clean brand name, e.g. 'Gucci' not 'GUCCI® UK Official Site'). Return ONLY valid JSON, nothing else.",
             },
             {
               role: "user",
-              content: `Create a luxury voice concierge system prompt for this brand:\n\nBrand: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep it under 500 words.`,
+              content: `Create a luxury voice concierge system prompt for this brand:\n\nRaw Title: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep the system_prompt under 500 words. For brand_name, extract just the clean brand name (e.g. "Gucci" not "GUCCI® UK Official Site | Celebrate Italian Heritage").`,
             },
           ],
         }),
@@ -154,8 +154,32 @@ serve(async (req) => {
     }
 
     const aiData = await aiRes.json();
-    const systemPrompt =
-      aiData.choices?.[0]?.message?.content || "You are a helpful concierge.";
+    const rawContent = aiData.choices?.[0]?.message?.content || "";
+    
+    let systemPrompt = "You are a helpful concierge.";
+    let cleanBrandName = pageTitle;
+    
+    try {
+      // Try to parse JSON response
+      const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        systemPrompt = parsed.system_prompt || systemPrompt;
+        cleanBrandName = parsed.brand_name || pageTitle;
+      } else {
+        systemPrompt = rawContent;
+      }
+    } catch {
+      // Fallback: use raw content as prompt, try simple brand cleanup
+      systemPrompt = rawContent || systemPrompt;
+      cleanBrandName = pageTitle
+        .split(/[|–—·]/)[0]
+        .replace(/[®™©]/g, "")
+        .replace(/\b(official|site|uk|us|store|shop|online|home)\b/gi, "")
+        .trim() || pageTitle;
+    }
+    
+    console.log("Clean brand name:", cleanBrandName);
 
     // 3. Create REAL ElevenLabs conversational agent
     console.log("Using Lovable ElevenLabs connection - REAL MODE");
@@ -172,13 +196,13 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: `Concierge - ${pageTitle}`,
+          name: `Concierge - ${cleanBrandName}`,
           conversation_config: {
             agent: {
               prompt: {
                 prompt: systemPrompt,
               },
-              first_message: `Welcome to ${pageTitle}. How may I assist you today?`,
+              first_message: `Welcome to ${cleanBrandName}. How may I assist you today?`,
               language: "en",
             },
           },
@@ -211,7 +235,7 @@ serve(async (req) => {
     const { data: pilot, error: dbError } = await supabase
       .from("pilots")
       .insert({
-        brand_name: pageTitle,
+        brand_name: cleanBrandName,
         source_url: url,
         agent_id: agentId,
         catalog_summary: catalogContent || null,

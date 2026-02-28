@@ -41,12 +41,17 @@ serve(async (req) => {
       });
     }
 
+    // Count pages scraped from catalog_summary
+    const catalogSummary = pilot.catalog_summary || "";
+    const pagesScraped = catalogSummary ? catalogSummary.split("---").length : 0;
+
     return new Response(
       JSON.stringify({
         pilot_id: pilot.id,
         brand_name: pilot.brand_name,
         source_url: pilot.source_url,
         agent_id: pilot.agent_id,
+        pages_scraped: pagesScraped,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

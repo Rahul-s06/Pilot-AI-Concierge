@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, QrCode, Eye, Mic } from "lucide-react";
+import { CheckCircle, QrCode, Eye, Mic, ExternalLink, Copy, Check, Globe, Package } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface PilotData {
   pilot_id: string;
   brand_name: string;
   source_url: string;
   agent_id: string;
+  pages_scraped: number;
 }
 
 const Dashboard = () => {
@@ -15,6 +17,8 @@ const Dashboard = () => {
   const [pilot, setPilot] = useState<PilotData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchPilot = async () => {
@@ -39,9 +43,15 @@ const Dashboard = () => {
     fetchPilot();
   }, [id]);
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-    `${window.location.origin}/pilot/${id}`
-  )}&bgcolor=0a0a0a&color=d4a843`;
+  const pilotUrl = `${window.location.origin}/pilot/${id}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pilotUrl)}&bgcolor=0a0a0a&color=d4a843`;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(pilotUrl);
+    setCopied(true);
+    toast({ title: "Link copied!" });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return (
@@ -75,7 +85,26 @@ const Dashboard = () => {
           </div>
 
           <h1 className="text-3xl font-display font-semibold">{pilot.brand_name}</h1>
-          <p className="text-sm text-muted-foreground font-body">{pilot.source_url}</p>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex items-center justify-center gap-6 text-sm font-body">
+          <a
+            href={pilot.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span className="truncate max-w-[140px]">{new URL(pilot.source_url).hostname}</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+          {pilot.pages_scraped > 0 && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Package className="w-3.5 h-3.5" />
+              <span>{pilot.pages_scraped} pages scraped</span>
+            </div>
+          )}
         </div>
 
         {/* QR Code */}
@@ -91,21 +120,33 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Info */}
-        <div className="bg-card border border-border rounded-lg p-4 text-left space-y-2">
-          <div className="flex justify-between text-sm font-body">
-            <span className="text-muted-foreground">Agent ID</span>
-            <span className="text-foreground font-mono text-xs">{pilot.agent_id.slice(0, 16)}…</span>
-          </div>
-        </div>
-
         {/* Actions */}
-        <Button asChild size="lg" className="w-full h-12 font-body">
-          <Link to={`/pilot/${id}`}>
-            <Eye className="w-4 h-4 mr-2" />
-            Preview Pilot
-          </Link>
-        </Button>
+        <div className="space-y-3">
+          <Button asChild size="lg" className="w-full h-12 font-body">
+            <Link to={`/pilot/${id}`}>
+              <Eye className="w-4 h-4 mr-2" />
+              Preview Pilot
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full h-12 font-body"
+            onClick={handleCopy}
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Pilot Link
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

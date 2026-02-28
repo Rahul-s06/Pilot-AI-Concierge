@@ -2,9 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, ArrowRight, Mic } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import GenerationProgress from "@/components/GenerationProgress";
+
+const quickLinks = [
+  { label: "Gucci", url: "https://www.gucci.com" },
+  { label: "Stripe", url: "https://stripe.com" },
+  { label: "Apple", url: "https://www.apple.com" },
+];
 
 const Index = () => {
   const [url, setUrl] = useState("");
@@ -12,10 +18,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) return;
+  const handleGenerate = async (targetUrl?: string) => {
+    const finalUrl = targetUrl || url.trim();
+    if (!finalUrl) return;
 
+    setUrl(finalUrl);
     setLoading(true);
     try {
       const response = await fetch(
@@ -26,7 +33,7 @@ const Index = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ url: url.trim() }),
+          body: JSON.stringify({ url: finalUrl }),
         }
       );
 
@@ -62,6 +69,18 @@ const Index = () => {
               Pilot.ai
             </span>
           </div>
+
+          {/* Waveform decoration */}
+          <div className="flex items-center justify-center gap-[3px] h-6 mb-4">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-[3px] bg-primary/30 rounded-full animate-waveform"
+                style={{ animationDelay: `${i * 0.12}s` }}
+              />
+            ))}
+          </div>
+
           <h1 className="text-5xl md:text-7xl font-display font-semibold leading-tight">
             Turn your website into a{" "}
             <span className="text-gold-gradient">voice concierge</span>
@@ -71,36 +90,48 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Form */}
-        <form
-          onSubmit={handleGenerate}
-          className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto animate-fade-in"
-          style={{ animationDelay: "0.2s" }}
-        >
-          <Input
-            type="url"
-            placeholder="https://yourbrand.com"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            required
-            className="flex-1 h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground font-body"
-          />
-          <Button
-            type="submit"
-            disabled={loading}
-            size="lg"
-            className="h-12 px-6 font-body font-medium"
-          >
-            {loading ? (
-              <Sparkles className="w-4 h-4 animate-pulse-gold" />
-            ) : (
-              <>
+        {loading ? (
+          <GenerationProgress isActive={loading} />
+        ) : (
+          <>
+            {/* Form */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleGenerate(); }}
+              className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto animate-fade-in"
+              style={{ animationDelay: "0.2s" }}
+            >
+              <Input
+                type="url"
+                placeholder="https://yourbrand.com"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+                className="flex-1 h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground font-body"
+              />
+              <Button type="submit" size="lg" className="h-12 px-6 font-body font-medium">
                 Generate Pilot
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </>
-            )}
-          </Button>
-        </form>
+              </Button>
+            </form>
+
+            {/* Quick-try links */}
+            <div
+              className="flex flex-wrap items-center justify-center gap-2 animate-fade-in"
+              style={{ animationDelay: "0.35s" }}
+            >
+              <span className="text-xs text-muted-foreground font-body mr-1">Try it with</span>
+              {quickLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => handleGenerate(link.url)}
+                  className="px-3 py-1.5 text-xs font-body font-medium rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Subtle footer */}
         <p
