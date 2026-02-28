@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -13,15 +13,27 @@ interface PilotData {
   source_url: string;
 }
 
+type Status = "idle" | "thinking" | "speaking";
+
 const Pilot = () => {
   const { id } = useParams<{ id: string }>();
   const [pilot, setPilot] = useState<PilotData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [text, setText] = useState("");
-  const [isFetching, setIsFetching] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
   const { toast } = useToast();
   const { currentMouth, isSpeaking, speak, stop } = useLipSync();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync speaking state back to status
+  useEffect(() => {
+    if (!isSpeaking && status === "speaking") {
+      setStatus("idle");
+      // Auto-focus input after speech ends
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isSpeaking, status]);
 
   useEffect(() => {
     const fetchPilot = async () => {
@@ -45,12 +57,40 @@ const Pilot = () => {
     fetchPilot();
   }, [id]);
 
-  const handleSpeak = useCallback(async () => {
-    if (!text.trim() || isFetching) return;
-    setIsFetching(true);
+  const handleSubmit = useCallback(async () => {
+    if (!text.trim() || status !== "idle" || !pilot) return;
+    
+    const userMessage = text.trim();
+    setText(""); // Clear input immediately
+    setStatus("thinking");
 
     try {
-      const response = await fetch(
+      // Step 1: Call AI chat endpoint
+      const chatRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ pilot_id: pilot.pilot_id, message: userMessage }),
+        }
+      );
+
+      if (!chatRes.ok) {
+        const err = await chatRes.json().catch(() => ({ error: "Chat failed" }));
+        throw new Error(err.error || "Chat request failed");
+      }
+
+      const { reply } = await chatRes.json();
+      console.log("AI reply:", reply?.substring(0, 100));
+
+      // Step 2: Send AI response to TTS
+      setStatus("speaking");
+
+      const ttsRes = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`,
         {
           method: "POST",
@@ -59,29 +99,29 @@ const Pilot = () => {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ text: text.trim() }),
+          body: JSON.stringify({ text: reply }),
         }
       );
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: "TTS failed" }));
+      if (!ttsRes.ok) {
+        const err = await ttsRes.json().catch(() => ({ error: "TTS failed" }));
         throw new Error(err.error || "TTS request failed");
       }
 
-      const audioBuffer = await response.arrayBuffer();
+      const audioBuffer = await ttsRes.arrayBuffer();
       console.log("TTS audio bytes length:", audioBuffer.byteLength);
       await speak(audioBuffer);
     } catch (err: any) {
-      console.error("TTS error:", err);
+      console.error("Pipeline error:", err);
+      setStatus("idle");
       toast({
-        title: "Speech failed",
+        title: "Error",
         description: err.message,
         variant: "destructive",
       });
-    } finally {
-      setIsFetching(false);
+      inputRef.current?.focus();
     }
-  }, [text, isFetching, speak, toast]);
+  }, [text, status, pilot, speak, toast]);
 
   if (loading) {
     return (
@@ -98,6 +138,8 @@ const Pilot = () => {
       </div>
     );
   }
+
+  const isDisabled = status !== "idle";
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between px-4 sm:px-6 bg-background relative overflow-hidden">
@@ -129,33 +171,40 @@ const Pilot = () => {
       <div className="relative z-10 w-full max-w-sm pb-8 sm:pb-12 space-y-4">
         {/* Status */}
         <div className="text-center text-sm text-muted-foreground font-body">
-          {isFetching ? "Generating speech…" : isSpeaking ? "Speaking…" : "Type something to speak"}
+          {status === "thinking" ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse [animation-delay:300ms]" />
+              <span className="ml-1">Thinking…</span>
+            </span>
+          ) : status === "speaking" ? (
+            "Speaking…"
+          ) : (
+            "Ask me anything"
+          )}
         </div>
 
         {/* Input + send */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleSpeak();
+            handleSubmit();
           }}
           className="flex gap-2"
         >
           <input
+            ref={inputRef}
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Type a message…"
-            className="flex-1 rounded-full border border-border bg-card/50 px-4 py-3 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-            disabled={isFetching}
+            className="flex-1 rounded-full border border-border bg-card/50 px-4 py-3 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-40"
+            disabled={isDisabled}
           />
           <button
             type="submit"
-            disabled={isFetching || !text.trim()}
-            onClick={() => {
-              if (isSpeaking) {
-                stop();
-              }
-            }}
+            disabled={isDisabled || !text.trim()}
             className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-40"
           >
             <Send className="w-5 h-5" />

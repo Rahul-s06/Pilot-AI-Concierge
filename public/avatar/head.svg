@@ -1,24 +1,81 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" fill="none">
-  <!-- Neck -->
-  <rect x="120" y="320" width="60" height="80" rx="20" fill="#d4a574"/>
-  <!-- Head shape -->
-  <ellipse cx="150" cy="180" rx="110" ry="140" fill="#e0b890"/>
-  <!-- Hair -->
-  <ellipse cx="150" cy="120" rx="115" ry="100" fill="#3a2a1a"/>
-  <rect x="35" y="120" width="230" height="20" rx="10" fill="#3a2a1a"/>
-  <!-- Eyes -->
-  <ellipse cx="105" cy="190" rx="14" ry="10" fill="white"/>
-  <ellipse cx="195" cy="190" rx="14" ry="10" fill="white"/>
-  <ellipse cx="107" cy="191" rx="7" ry="7" fill="#2c1810"/>
-  <ellipse cx="197" cy="191" rx="7" ry="7" fill="#2c1810"/>
-  <circle cx="109" cy="188" r="2.5" fill="white"/>
-  <circle cx="199" cy="188" r="2.5" fill="white"/>
-  <!-- Eyebrows -->
-  <path d="M82 172 Q105 162 128 172" stroke="#3a2a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <path d="M172 172 Q195 162 218 172" stroke="#3a2a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <!-- Nose -->
-  <path d="M145 210 Q150 230 155 210" stroke="#c09870" stroke-width="2" fill="none"/>
-  <!-- Ears -->
-  <ellipse cx="40" cy="195" rx="12" ry="20" fill="#d4a574"/>
-  <ellipse cx="260" cy="195" rx="12" ry="20" fill="#d4a574"/>
+  <defs>
+    <!-- Luxury skin gradient -->
+    <radialGradient id="skinGrad" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#f0d5b8"/>
+      <stop offset="60%" stop-color="#d4a574"/>
+      <stop offset="100%" stop-color="#b8865a"/>
+    </radialGradient>
+    <!-- Hair gradient -->
+    <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <!-- Subtle face shadow -->
+    <radialGradient id="faceShadow" cx="50%" cy="70%" r="50%">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.08)"/>
+    </radialGradient>
+    <!-- Gold accent -->
+    <linearGradient id="goldAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c9a45c"/>
+      <stop offset="50%" stop-color="#e8c97a"/>
+      <stop offset="100%" stop-color="#c9a45c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Neck with gradient -->
+  <rect x="125" y="310" width="50" height="90" rx="22" fill="url(#skinGrad)" opacity="0.9"/>
+
+  <!-- Head shape - smoother, more refined -->
+  <ellipse cx="150" cy="185" rx="100" ry="130" fill="url(#skinGrad)"/>
+  <!-- Subtle jaw definition -->
+  <ellipse cx="150" cy="240" rx="80" ry="70" fill="url(#skinGrad)"/>
+  <!-- Face shadow overlay -->
+  <ellipse cx="150" cy="200" rx="95" ry="125" fill="url(#faceShadow)"/>
+
+  <!-- Hair - sleek, modern -->
+  <ellipse cx="150" cy="115" rx="105" ry="85" fill="url(#hairGrad)"/>
+  <path d="M45 130 Q50 80 100 55 Q150 35 200 55 Q250 80 255 130 Q250 115 200 100 Q150 90 100 100 Q50 115 45 130Z" fill="url(#hairGrad)"/>
+  <!-- Side hair -->
+  <path d="M48 130 Q46 160 50 180" stroke="url(#hairGrad)" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M252 130 Q254 160 250 180" stroke="url(#hairGrad)" stroke-width="12" fill="none" stroke-linecap="round"/>
+
+  <!-- Eyes - refined, elegant -->
+  <ellipse cx="110" cy="190" rx="12" ry="8" fill="white"/>
+  <ellipse cx="190" cy="190" rx="12" ry="8" fill="white"/>
+  <!-- Irises - deep brown -->
+  <ellipse cx="112" cy="191" rx="6" ry="6.5" fill="#1a120a"/>
+  <ellipse cx="192" cy="191" rx="6" ry="6.5" fill="#1a120a"/>
+  <!-- Iris detail -->
+  <ellipse cx="112" cy="191" rx="4" ry="4.5" fill="#2c1810"/>
+  <ellipse cx="192" cy="191" rx="4" ry="4.5" fill="#2c1810"/>
+  <!-- Catch lights -->
+  <circle cx="114" cy="188" r="2" fill="white" opacity="0.9"/>
+  <circle cx="194" cy="188" r="2" fill="white" opacity="0.9"/>
+  <circle cx="110" cy="193" r="1" fill="white" opacity="0.4"/>
+  <circle cx="190" cy="193" r="1" fill="white" opacity="0.4"/>
+
+  <!-- Eyelids - subtle -->
+  <path d="M96 186 Q110 182 124 186" stroke="#b8865a" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <path d="M176 186 Q190 182 204 186" stroke="#b8865a" stroke-width="1.5" fill="none" opacity="0.4"/>
+
+  <!-- Eyebrows - groomed, refined -->
+  <path d="M88 172 Q110 164 128 173" stroke="url(#hairGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M172 173 Q190 164 212 172" stroke="url(#hairGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose - subtle, refined -->
+  <path d="M148 215 Q150 225 152 215" stroke="#c09870" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M143 222 Q150 228 157 222" stroke="#c09870" stroke-width="1" fill="none" opacity="0.3"/>
+
+  <!-- Ears - refined -->
+  <ellipse cx="50" cy="195" rx="10" ry="18" fill="url(#skinGrad)" opacity="0.85"/>
+  <ellipse cx="250" cy="195" rx="10" ry="18" fill="url(#skinGrad)" opacity="0.85"/>
+  <!-- Ear inner detail -->
+  <ellipse cx="52" cy="195" rx="5" ry="10" fill="#c09870" opacity="0.2"/>
+  <ellipse cx="248" cy="195" rx="5" ry="10" fill="#c09870" opacity="0.2"/>
+
+  <!-- Gold earring accent -->
+  <circle cx="50" cy="214" r="3" fill="url(#goldAccent)" opacity="0.7"/>
+  <circle cx="250" cy="214" r="3" fill="url(#goldAccent)" opacity="0.7"/>
 </svg>
