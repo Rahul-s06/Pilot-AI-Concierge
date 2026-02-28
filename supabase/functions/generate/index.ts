@@ -80,41 +80,9 @@ serve(async (req) => {
     const systemPrompt =
       aiData.choices?.[0]?.message?.content || "You are a helpful concierge.";
 
-    // 3. Create ElevenLabs conversational agent
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
-    if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY not configured");
-
-    const agentRes = await fetch(
-      "https://api.elevenlabs.io/v1/convai/agents/create",
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          conversation_config: {
-            agent: {
-              prompt: {
-                prompt: systemPrompt,
-              },
-              first_message: `Welcome. I'm your ${pageTitle} concierge. How may I assist you today?`,
-              language: "en",
-            },
-          },
-          name: `Pilot - ${pageTitle}`,
-        }),
-      }
-    );
-
-    if (!agentRes.ok) {
-      const errText = await agentRes.text();
-      console.error("ElevenLabs error:", agentRes.status, errText);
-      throw new Error("Failed to create agent");
-    }
-
-    const agentData = await agentRes.json();
-    const agentId = agentData.agent_id;
+    // 3. Mock ElevenLabs agent (real integration removed temporarily)
+    console.log("Running in MOCK ElevenLabs mode");
+    const agentId = "test_agent_" + Math.random().toString(36).substring(7);
 
     // 4. Store in database
     const supabase = createClient(
