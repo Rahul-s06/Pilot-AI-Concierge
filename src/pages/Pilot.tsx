@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { useConversation } from "@elevenlabs/react";
-import { Mic, MicOff, ExternalLink } from "lucide-react";
+import { Send } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useLipSync } from "@/hooks/useLipSync";
+import AvatarStage from "@/components/AvatarStage";
 
 interface PilotData {
   pilot_id: string;
@@ -13,103 +13,15 @@ interface PilotData {
   source_url: string;
 }
 
-interface TranscriptEntry {
-  role: "user" | "agent" | "link";
-  text: string;
-  id: number;
-  url?: string;
-  product_name?: string;
-}
-
-const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
-  if (entry.role === "link") {
-    return (
-      <div className="flex justify-start">
-        <a
-          href={entry.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block max-w-[85%] rounded-xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors group"
-        >
-          <p className="text-[11px] uppercase tracking-wider text-primary/60 font-medium mb-1">
-            Product Link
-          </p>
-          <p className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors">
-            {entry.product_name || entry.text}
-          </p>
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
-            <ExternalLink className="w-3 h-3" />
-            <span className="truncate">{entry.url}</span>
-          </div>
-        </a>
-      </div>
-    );
-  }
-
-  const isAgent = entry.role === "agent";
-
-  return (
-    <div className={`flex ${isAgent ? "justify-start" : "justify-end"}`}>
-      <div className={`max-w-[85%] space-y-1`}>
-        <p className={`text-[11px] uppercase tracking-wider font-medium ${isAgent ? "text-primary/60" : "text-muted-foreground/60 text-right"}`}>
-          {isAgent ? "Concierge" : "You"}
-        </p>
-        <div
-          className={`rounded-2xl px-4 py-2.5 text-sm sm:text-base leading-relaxed ${
-            isAgent
-              ? "bg-card border border-border text-foreground rounded-tl-md"
-              : "bg-primary/10 text-foreground rounded-tr-md"
-          }`}
-        >
-          {entry.text}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Pilot = () => {
   const { id } = useParams<{ id: string }>();
   const [pilot, setPilot] = useState<PilotData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+  const [text, setText] = useState("");
+  const [isFetching, setIsFetching] = useState(false);
   const { toast } = useToast();
-  const transcriptEnd = useRef<HTMLDivElement>(null);
-  const entryId = useRef(0);
-
-  const conversation = useConversation({
-    onConnect: () => console.log("Connected to ElevenLabs agent"),
-    onDisconnect: () => console.log("Disconnected from agent"),
-    onError: (err) => console.error("Conversation error:", err),
-    onMessage: (message) => {
-      const role = message.source === "user" ? "user" : "agent";
-      setTranscript((prev) => [
-        ...prev,
-        { role, text: message.message, id: entryId.current++ },
-      ]);
-    },
-    clientTools: {
-      send_product_link: (params: { url: string; product_name: string }) => {
-        setTranscript((prev) => [
-          ...prev,
-          {
-            role: "link" as const,
-            text: params.product_name,
-            url: params.url,
-            product_name: params.product_name,
-            id: entryId.current++,
-          },
-        ]);
-        return "Link sent to the user";
-      },
-    },
-  });
-
-  useEffect(() => {
-    transcriptEnd.current?.scrollIntoView({ behavior: "smooth" });
-  }, [transcript]);
+  const { currentMouth, isSpeaking, speak, stop } = useLipSync();
 
   useEffect(() => {
     const fetchPilot = async () => {
@@ -133,36 +45,43 @@ const Pilot = () => {
     fetchPilot();
   }, [id]);
 
-  const startConversation = useCallback(async () => {
-    if (!pilot) return;
-    setIsConnecting(true);
+  const handleSpeak = useCallback(async () => {
+    if (!text.trim() || isFetching) return;
+    setIsFetching(true);
+
     try {
-      await navigator.mediaDevices.getUserMedia({
-        audio: {
-          noiseSuppression: true,
-          echoCancellation: true,
-          autoGainControl: true,
-        },
-      });
-      await conversation.startSession({
-        agentId: pilot.agent_id,
-        connectionType: "webrtc",
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: text.trim() }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "TTS failed" }));
+        throw new Error(err.error || "TTS request failed");
+      }
+
+      const audioBuffer = await response.arrayBuffer();
+      console.log("TTS audio bytes length:", audioBuffer.byteLength);
+      await speak(audioBuffer);
     } catch (err: any) {
-      console.error("Failed to start:", err);
+      console.error("TTS error:", err);
       toast({
-        title: "Microphone access required",
-        description: "Please allow microphone access in your browser settings to use the voice concierge.",
+        title: "Speech failed",
+        description: err.message,
         variant: "destructive",
       });
     } finally {
-      setIsConnecting(false);
+      setIsFetching(false);
     }
-  }, [conversation, pilot]);
-
-  const stopConversation = useCallback(async () => {
-    await conversation.endSession();
-  }, [conversation]);
+  }, [text, isFetching, speak, toast]);
 
   if (loading) {
     return (
@@ -180,108 +99,78 @@ const Pilot = () => {
     );
   }
 
-  const isConnected = conversation.status === "connected";
-  const isSpeaking = conversation.isSpeaking;
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 bg-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-between px-4 sm:px-6 bg-background relative overflow-hidden">
       {/* Ambient glow */}
       <div
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[180px] pointer-events-none transition-all duration-1000 ${
-          isConnected && isSpeaking
+        className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[180px] pointer-events-none transition-all duration-1000 ${
+          isSpeaking
             ? "w-[600px] h-[600px] bg-primary/20 opacity-100"
-            : isConnected
-            ? "w-[500px] h-[500px] bg-primary/8 opacity-80"
             : "w-[400px] h-[400px] bg-primary/5 opacity-50"
         }`}
       />
 
-      <div className="relative z-10 text-center space-y-8 sm:space-y-10 max-w-sm w-full">
-        <div className="space-y-3">
-          <p className="text-sm font-body tracking-[0.3em] uppercase text-gold-gradient font-medium">
-            {pilot.brand_name}
-          </p>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold">
-            Speak to your <span className="text-gold-gradient">concierge</span>
-          </h1>
+      {/* Header */}
+      <div className="relative z-10 text-center pt-8 sm:pt-12 space-y-2">
+        <p className="text-sm font-body tracking-[0.3em] uppercase text-gold-gradient font-medium">
+          {pilot.brand_name}
+        </p>
+        <h1 className="text-xl sm:text-2xl font-display font-semibold">
+          <span className="text-gold-gradient">Concierge</span>
+        </h1>
+      </div>
+
+      {/* Avatar Stage */}
+      <div className="relative z-10 flex-1 flex items-center justify-center w-full max-w-xs py-4">
+        <AvatarStage currentMouth={currentMouth} isSpeaking={isSpeaking} />
+      </div>
+
+      {/* Controls */}
+      <div className="relative z-10 w-full max-w-sm pb-8 sm:pb-12 space-y-4">
+        {/* Status */}
+        <div className="text-center text-sm text-muted-foreground font-body">
+          {isFetching ? "Generating speech…" : isSpeaking ? "Speaking…" : "Type something to speak"}
         </div>
 
-        {/* Mic button with outer ring and pulse rings */}
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full border border-primary/15" />
-
-          {isConnected && isSpeaking && (
-            <>
-              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/40 animate-pulse-ring" />
-              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/30 animate-pulse-ring" style={{ animationDelay: "0.6s" }} />
-              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/20 animate-pulse-ring" style={{ animationDelay: "1.2s" }} />
-            </>
-          )}
-
+        {/* Input + send */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSpeak();
+          }}
+          className="flex gap-2"
+        >
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type a message…"
+            className="flex-1 rounded-full border border-border bg-card/50 px-4 py-3 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+            disabled={isFetching}
+          />
           <button
-            onClick={isConnected ? stopConversation : startConversation}
-            disabled={isConnecting}
-            className={`relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isConnected
-                ? "bg-primary text-primary-foreground scale-110 glow-gold"
-                : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground hover:scale-105 animate-breathe"
-            } ${isConnecting ? "animate-pulse-gold" : ""}`}
+            type="submit"
+            disabled={isFetching || !text.trim()}
+            onClick={() => {
+              if (isSpeaking) {
+                stop();
+              }
+            }}
+            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-40"
           >
-            {isConnected ? (
-              <MicOff className="w-8 h-8 sm:w-10 sm:h-10" />
-            ) : (
-              <Mic className="w-8 h-8 sm:w-10 sm:h-10" />
-            )}
+            <Send className="w-5 h-5" />
           </button>
-        </div>
-
-        <div className="text-base sm:text-lg text-muted-foreground font-body font-light flex items-center justify-center gap-2">
-          {isConnecting ? (
-            "Connecting…"
-          ) : isConnected ? (
-            isSpeaking ? (
-              "Concierge is speaking…"
-            ) : (
-              <>
-                <div className="flex items-center gap-[2px] h-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-[2px] bg-primary/50 rounded-full animate-waveform"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </div>
-                Listening…
-              </>
-            )
-          ) : (
-            "Tap to begin"
-          )}
-        </div>
-
-        {/* Live transcript */}
-        {transcript.length > 0 && (
-          <div className="relative">
-            <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-background to-transparent z-10 rounded-t-lg pointer-events-none" />
-            <ScrollArea className="h-56 sm:h-64 w-full rounded-lg border border-border bg-card/30 p-4">
-              <div className="space-y-4 pt-4">
-                {transcript.map((entry) => (
-                  <TranscriptBubble key={entry.id} entry={entry} />
-                ))}
-                <div ref={transcriptEnd} />
-              </div>
-            </ScrollArea>
-          </div>
-        )}
+        </form>
 
         {/* Powered by footer */}
-        <Link
-          to="/"
-          className="inline-block text-xs text-muted-foreground/50 font-body hover:text-muted-foreground transition-colors"
-        >
-          Powered by <span className="text-gold-gradient">Pilot</span>
-        </Link>
+        <div className="text-center">
+          <Link
+            to="/"
+            className="inline-block text-xs text-muted-foreground/50 font-body hover:text-muted-foreground transition-colors"
+          >
+            Powered by <span className="text-gold-gradient">Pilot</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

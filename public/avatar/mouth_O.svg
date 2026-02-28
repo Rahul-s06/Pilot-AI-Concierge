@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40" fill="none">
+  <!-- Round open - "oh" -->
+  <ellipse cx="40" cy="20" rx="14" ry="14" fill="#6b1a1a"/>
+  <ellipse cx="40" cy="13" rx="12" ry="3" fill="white" opacity="0.9"/>
+</svg>
