@@ -1,50 +1,32 @@
-## Improvements to Make Pilot.ai More Impressive
 
-The landing page and dashboard look solid. Here are focused improvements across the remaining screens.
 
-### 1. Pilot Voice Page -- Animated Pulse Rings
+## Plan: Improve Concierge Page & Fix Home Spacing
 
-Add concentric pulse rings around the mic button that animate outward when the concierge is speaking. This makes the voice interaction feel alive and immersive.
+### 1. Fix Home Page Spacing
 
-**Changes to `src/pages/Pilot.tsx`:**
+In `src/pages/Index.tsx`, the `space-y-2` on the header div creates tight spacing between "voice concierge" and the subtitle. Change to `space-y-4` and increase the top-level `space-y-12` to `space-y-10` for better balance. Also add `mt-6` to the subtitle paragraph for more breathing room after the headline.
 
-- Add 2-3 expanding/fading ring divs behind the mic button that animate when `isSpeaking` is true
-- Smoother state transitions with opacity/scale on the button itself
+### 2. Redesign Concierge (Pilot) Page
 
-**Changes to `src/index.css`:**
+In `src/pages/Pilot.tsx`, make these visual improvements:
 
-- Add a `@keyframes pulse-ring` animation that scales up and fades out
+- **Larger mic button**: Increase from `w-20 h-20` / `w-24 h-24` to `w-28 h-28` / `w-32 h-32` -- this is the hero element
+- **Subtle outer ring**: Add a static faint ring around the mic button (border with low opacity) that's always visible, giving it more presence even before connecting
+- **Smoother idle state**: Add a gentle breathing animation (`animate-pulse` with custom slower timing) on the mic button when disconnected
+- **Better connected state glow**: Increase the ambient background glow size and intensity when speaking
+- **Refined transcript area**: Add a subtle gradient fade at the top of the transcript scroll area, increase the height, and use slightly larger text
+- **Brand identity at top**: Style the brand name with the gold gradient and make it slightly larger
+- **"Powered by Pilot.ai" footer**: Add a subtle footer link back to home
+- **Status text styling**: Make the status text ("Tap to begin", "Listening...", "Speaking...") slightly larger with better visual hierarchy
 
-### 2. Pilot Voice Page -- Live Transcript
+### 3. CSS Additions
 
-Show a scrolling transcript below the mic button with user and agent messages. Uses the existing ElevenLabs `onMessage` callback -- no new dependencies.
+In `src/index.css`:
+- Add a `@keyframes breathe` animation (subtle scale 1 to 1.03 and back) for the idle mic button
+- Add `.animate-breathe` utility class
 
-**Changes to `src/pages/Pilot.tsx`:**
+### Files Changed
+- `src/pages/Index.tsx` -- spacing fix
+- `src/pages/Pilot.tsx` -- visual redesign
+- `src/index.css` -- breathing animation
 
-- Add `onMessage` handler to `useConversation` to capture transcript entries
-- Render a small scrollable transcript area below the status text
-- Style user messages vs agent messages differently (left/right or different opacity)
-
-### 3. Landing Page -- Smoother Generation Completion
-
-When generation finishes, add a brief "Done!" state with a checkmark before navigating to the dashboard, so the transition feels intentional rather than abrupt.
-
-**Changes to `src/pages/Index.tsx`:**
-
-- After successful generation, show a "Pilot ready!" state for ~800ms before navigating
-
-**Changes to `src/components/GenerationProgress.tsx`:**
-
-- Add a final "complete" state with all steps checked
-
-### 4. Mobile Responsiveness Pass
-
-Ensure the pilot voice page and dashboard look great on phone screens since QR codes will often be scanned on mobile.
-
-**Changes to `src/pages/Pilot.tsx` and `src/pages/Dashboard.tsx`:**
-
-- Verify spacing, font sizes, and button sizes work on small viewports
-
-&nbsp;
-
-Also change the colour of the QR code from yellow to white
