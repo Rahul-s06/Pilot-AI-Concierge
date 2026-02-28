@@ -28,12 +28,12 @@ const Pilot = () => {
   const { currentMouth, isSpeaking, speak, stop: stopAudio } = useLipSync();
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const submitRef = useRef<(msg: string) => void>(() => {});
 
-  // Voice input callback — triggers pipeline automatically
+  // Voice input callback — uses ref to avoid stale closure
   const onVoiceResult = useCallback((transcript: string) => {
     setText(transcript);
-    // We'll submit via a ref-based trigger after state updates
-    submitMessage(transcript);
+    submitRef.current(transcript);
   }, []);
 
   const { isListening, start: startListening, stop: stopListening } = useSpeechRecognition(onVoiceResult);
@@ -153,6 +153,11 @@ const Pilot = () => {
     },
     [text, status, pilot, speak, stopListening, toast]
   );
+
+  // Keep ref in sync so voice callback always has latest submitMessage
+  useEffect(() => {
+    submitRef.current = (msg: string) => submitMessage(msg);
+  }, [submitMessage]);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
