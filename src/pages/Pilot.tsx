@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useConversation } from "@elevenlabs/react";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -10,13 +10,63 @@ interface PilotData {
   pilot_id: string;
   brand_name: string;
   agent_id: string;
+  source_url: string;
 }
 
 interface TranscriptEntry {
-  role: "user" | "agent";
+  role: "user" | "agent" | "link";
   text: string;
   id: number;
+  url?: string;
+  product_name?: string;
 }
+
+const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
+  if (entry.role === "link") {
+    return (
+      <div className="flex justify-start">
+        <a
+          href={entry.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block max-w-[85%] rounded-xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors group"
+        >
+          <p className="text-[11px] uppercase tracking-wider text-primary/60 font-medium mb-1">
+            Product Link
+          </p>
+          <p className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors">
+            {entry.product_name || entry.text}
+          </p>
+          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+            <ExternalLink className="w-3 h-3" />
+            <span className="truncate">{entry.url}</span>
+          </div>
+        </a>
+      </div>
+    );
+  }
+
+  const isAgent = entry.role === "agent";
+
+  return (
+    <div className={`flex ${isAgent ? "justify-start" : "justify-end"}`}>
+      <div className={`max-w-[85%] space-y-1`}>
+        <p className={`text-[11px] uppercase tracking-wider font-medium ${isAgent ? "text-primary/60" : "text-muted-foreground/60 text-right"}`}>
+          {isAgent ? "Concierge" : "You"}
+        </p>
+        <div
+          className={`rounded-2xl px-4 py-2.5 text-sm sm:text-base leading-relaxed ${
+            isAgent
+              ? "bg-card border border-border text-foreground rounded-tl-md"
+              : "bg-primary/10 text-foreground rounded-tr-md"
+          }`}
+        >
+          {entry.text}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Pilot = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +80,7 @@ const Pilot = () => {
   const entryId = useRef(0);
 
   const conversation = useConversation({
-    onConnect: () => console.log("Connected to ElevenLabs agent - REAL MODE"),
+    onConnect: () => console.log("Connected to ElevenLabs agent"),
     onDisconnect: () => console.log("Disconnected from agent"),
     onError: (err) => console.error("Conversation error:", err),
     onMessage: (message) => {
@@ -39,6 +89,21 @@ const Pilot = () => {
         ...prev,
         { role, text: message.message, id: entryId.current++ },
       ]);
+    },
+    clientTools: {
+      send_product_link: (params: { url: string; product_name: string }) => {
+        setTranscript((prev) => [
+          ...prev,
+          {
+            role: "link" as const,
+            text: params.product_name,
+            url: params.url,
+            product_name: params.product_name,
+            id: entryId.current++,
+          },
+        ]);
+        return "Link sent to the user";
+      },
     },
   });
 
@@ -71,9 +136,14 @@ const Pilot = () => {
   const startConversation = useCallback(async () => {
     if (!pilot) return;
     setIsConnecting(true);
-    setTranscript([]);
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      await navigator.mediaDevices.getUserMedia({
+        audio: {
+          noiseSuppression: true,
+          echoCancellation: true,
+          autoGainControl: true,
+        },
+      });
       await conversation.startSession({
         agentId: pilot.agent_id,
         connectionType: "webrtc",
@@ -115,7 +185,7 @@ const Pilot = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 bg-background relative overflow-hidden">
-      {/* Ambient glow - always visible, intensifies when speaking */}
+      {/* Ambient glow */}
       <div
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[180px] pointer-events-none transition-all duration-1000 ${
           isConnected && isSpeaking
@@ -138,10 +208,8 @@ const Pilot = () => {
 
         {/* Mic button with outer ring and pulse rings */}
         <div className="relative flex items-center justify-center">
-          {/* Static outer ring - always visible */}
           <div className="absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full border border-primary/15" />
 
-          {/* Pulse rings - visible when speaking */}
           {isConnected && isSpeaking && (
             <>
               <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/40 animate-pulse-ring" />
@@ -195,24 +263,11 @@ const Pilot = () => {
         {/* Live transcript */}
         {transcript.length > 0 && (
           <div className="relative">
-            {/* Gradient fade at top */}
             <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-background to-transparent z-10 rounded-t-lg pointer-events-none" />
-            <ScrollArea className="h-48 sm:h-56 w-full rounded-lg border border-border bg-card/50 p-4">
-              <div className="space-y-2.5 pt-4">
+            <ScrollArea className="h-56 sm:h-64 w-full rounded-lg border border-border bg-card/30 p-4">
+              <div className="space-y-4 pt-4">
                 {transcript.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={`text-sm sm:text-base font-body leading-relaxed ${
-                      entry.role === "agent"
-                        ? "text-foreground"
-                        : "text-muted-foreground opacity-70"
-                    }`}
-                  >
-                    <span className="text-primary/60 font-medium text-[11px] uppercase tracking-wider mr-1.5">
-                      {entry.role === "agent" ? "Concierge" : "You"}
-                    </span>
-                    {entry.text}
-                  </div>
+                  <TranscriptBubble key={entry.id} entry={entry} />
                 ))}
                 <div ref={transcriptEnd} />
               </div>

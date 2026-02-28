@@ -136,11 +136,11 @@ serve(async (req) => {
             {
               role: "system",
               content:
-                "You create luxury voice concierge system prompts for brands. You also extract a clean, short brand name. Return a JSON object with two keys: \"system_prompt\" (the concierge prompt text) and \"brand_name\" (just the clean brand name, e.g. 'Gucci' not 'GUCCI® UK Official Site'). Return ONLY valid JSON, nothing else.",
+                "You create voice concierge system prompts for brands. You also extract a clean, short brand name. Return a JSON object with two keys: \"system_prompt\" (the concierge prompt text) and \"brand_name\" (just the clean brand name, e.g. 'Gucci' not 'GUCCI® UK Official Site'). Return ONLY valid JSON, nothing else.",
             },
             {
               role: "user",
-              content: `Create a luxury voice concierge system prompt for this brand:\n\nRaw Title: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, sophisticated, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep the system_prompt under 1500 words. For brand_name, extract just the clean brand name (e.g. "Gucci" not "GUCCI® UK Official Site | Celebrate Italian Heritage").`,
+              content: `Create a voice concierge system prompt for this brand:\n\nRaw Title: ${pageTitle}\nDescription: ${metaDescription || "N/A"}\nWebsite: ${url}\n\nPage Content:\n${pageContent || "N/A"}\n\nProduct Catalog:\n${catalogContent || "No catalog data available"}\n\nThe concierge should be warm, knowledgeable about the brand and its products, and helpful. It should be able to discuss specific products when asked. Keep the system_prompt under 1500 words. For brand_name, extract just the clean brand name (e.g. "Gucci" not "GUCCI® UK Official Site | Celebrate Italian Heritage").\n\nIMPORTANT: Include in the system prompt that the agent has access to a tool called "send_product_link" which it should use when the user expresses interest in a specific product, wants to see it, or is ready to purchase. The tool takes "url" and "product_name" parameters. The agent should use product URLs from the catalog data when available.`,
             },
           ],
         }),
@@ -187,6 +187,44 @@ serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY_1");
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY_1 not configured");
 
+    // First create the client tool
+    console.log("Creating send_product_link client tool...");
+    const toolRes = await fetch(
+      "https://api.elevenlabs.io/v1/convai/tools",
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tool_config: {
+            type: "client",
+            name: "send_product_link",
+            description: "Send a product link to the user when they want to see, learn about, or buy a product. Use this whenever the user shows interest in a specific product.",
+            expects_response: false,
+            parameters: {
+              type: "object",
+              properties: {
+                url: { type: "string", description: "The product page URL" },
+                product_name: { type: "string", description: "Name of the product" },
+              },
+              required: ["url", "product_name"],
+            },
+          },
+        }),
+      }
+    );
+
+    let toolId: string | null = null;
+    if (toolRes.ok) {
+      const toolData = await toolRes.json();
+      toolId = toolData.id;
+      console.log("Client tool created:", toolId);
+    } else {
+      console.error("Failed to create client tool:", await toolRes.text());
+    }
+
     const agentRes = await fetch(
       "https://api.elevenlabs.io/v1/convai/agents/create",
       {
@@ -204,6 +242,7 @@ serve(async (req) => {
               },
               first_message: `Welcome to ${cleanBrandName}. How may I assist you today?`,
               language: "en",
+              ...(toolId ? { tools: [{ id: toolId }] } : {}),
             },
           },
         }),
