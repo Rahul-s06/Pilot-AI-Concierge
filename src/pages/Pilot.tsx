@@ -29,7 +29,7 @@ const TranscriptBubble = ({ entry }: { entry: TranscriptEntry }) => {
           href={entry.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block max-w-[85%] group"
+          className="block max-w-[85%] group overflow-hidden"
         >
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors">
             <p className="text-[11px] uppercase tracking-wider text-primary/60 font-medium mb-1.5">
