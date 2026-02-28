@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useConversation } from "@elevenlabs/react";
 import { Mic, MicOff } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PilotData {
@@ -107,17 +108,20 @@ const Pilot = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 bg-background relative overflow-hidden">
-      {isConnected && (
-        <div
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[150px] pointer-events-none transition-opacity duration-1000 ${
-            isSpeaking ? "bg-primary/15 opacity-100" : "bg-primary/5 opacity-60"
-          }`}
-        />
-      )}
+      {/* Ambient glow - always visible, intensifies when speaking */}
+      <div
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[180px] pointer-events-none transition-all duration-1000 ${
+          isConnected && isSpeaking
+            ? "w-[600px] h-[600px] bg-primary/20 opacity-100"
+            : isConnected
+            ? "w-[500px] h-[500px] bg-primary/8 opacity-80"
+            : "w-[400px] h-[400px] bg-primary/5 opacity-50"
+        }`}
+      />
 
       <div className="relative z-10 text-center space-y-8 sm:space-y-10 max-w-sm w-full">
-        <div className="space-y-2">
-          <p className="text-xs font-body tracking-[0.3em] uppercase text-muted-foreground">
+        <div className="space-y-3">
+          <p className="text-sm font-body tracking-[0.3em] uppercase text-gold-gradient font-medium">
             {pilot.brand_name}
           </p>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold">
@@ -125,35 +129,38 @@ const Pilot = () => {
           </h1>
         </div>
 
-        {/* Mic button with pulse rings */}
+        {/* Mic button with outer ring and pulse rings */}
         <div className="relative flex items-center justify-center">
+          {/* Static outer ring - always visible */}
+          <div className="absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full border border-primary/15" />
+
           {/* Pulse rings - visible when speaking */}
           {isConnected && isSpeaking && (
             <>
-              <div className="absolute w-24 h-24 rounded-full border border-primary/40 animate-pulse-ring" />
-              <div className="absolute w-24 h-24 rounded-full border border-primary/30 animate-pulse-ring" style={{ animationDelay: "0.6s" }} />
-              <div className="absolute w-24 h-24 rounded-full border border-primary/20 animate-pulse-ring" style={{ animationDelay: "1.2s" }} />
+              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/40 animate-pulse-ring" />
+              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/30 animate-pulse-ring" style={{ animationDelay: "0.6s" }} />
+              <div className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-primary/20 animate-pulse-ring" style={{ animationDelay: "1.2s" }} />
             </>
           )}
 
           <button
             onClick={isConnected ? stopConversation : startConversation}
             disabled={isConnecting}
-            className={`relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all duration-300 ${
+            className={`relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center transition-all duration-300 ${
               isConnected
                 ? "bg-primary text-primary-foreground scale-110 glow-gold"
-                : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground hover:scale-105"
+                : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground hover:scale-105 animate-breathe"
             } ${isConnecting ? "animate-pulse-gold" : ""}`}
           >
             {isConnected ? (
-              <MicOff className="w-7 h-7 sm:w-8 sm:h-8" />
+              <MicOff className="w-8 h-8 sm:w-10 sm:h-10" />
             ) : (
-              <Mic className="w-7 h-7 sm:w-8 sm:h-8" />
+              <Mic className="w-8 h-8 sm:w-10 sm:h-10" />
             )}
           </button>
         </div>
 
-        <p className="text-sm text-muted-foreground font-body">
+        <p className="text-base sm:text-lg text-muted-foreground font-body font-light">
           {isConnecting
             ? "Connecting…"
             : isConnected
@@ -165,27 +172,39 @@ const Pilot = () => {
 
         {/* Live transcript */}
         {transcript.length > 0 && (
-          <ScrollArea className="h-40 sm:h-48 w-full rounded-lg border border-border bg-card/50 p-3">
-            <div className="space-y-2">
-              {transcript.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={`text-xs sm:text-sm font-body leading-relaxed ${
-                    entry.role === "agent"
-                      ? "text-foreground"
-                      : "text-muted-foreground opacity-70"
-                  }`}
-                >
-                  <span className="text-primary/60 font-medium text-[10px] uppercase tracking-wider mr-1.5">
-                    {entry.role === "agent" ? "Concierge" : "You"}
-                  </span>
-                  {entry.text}
-                </div>
-              ))}
-              <div ref={transcriptEnd} />
-            </div>
-          </ScrollArea>
+          <div className="relative">
+            {/* Gradient fade at top */}
+            <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-background to-transparent z-10 rounded-t-lg pointer-events-none" />
+            <ScrollArea className="h-48 sm:h-56 w-full rounded-lg border border-border bg-card/50 p-4">
+              <div className="space-y-2.5 pt-4">
+                {transcript.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className={`text-sm sm:text-base font-body leading-relaxed ${
+                      entry.role === "agent"
+                        ? "text-foreground"
+                        : "text-muted-foreground opacity-70"
+                    }`}
+                  >
+                    <span className="text-primary/60 font-medium text-[11px] uppercase tracking-wider mr-1.5">
+                      {entry.role === "agent" ? "Concierge" : "You"}
+                    </span>
+                    {entry.text}
+                  </div>
+                ))}
+                <div ref={transcriptEnd} />
+              </div>
+            </ScrollArea>
+          </div>
         )}
+
+        {/* Powered by footer */}
+        <Link
+          to="/"
+          className="inline-block text-xs text-muted-foreground/50 font-body hover:text-muted-foreground transition-colors"
+        >
+          Powered by <span className="text-gold-gradient">Pilot.ai</span>
+        </Link>
       </div>
     </div>
   );
