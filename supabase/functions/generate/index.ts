@@ -201,12 +201,11 @@ serve(async (req) => {
           tool_config: {
             type: "client",
             name: "send_product_link",
-            description: "Send a product link to the user when they want to see, learn about, or buy a product. Use this whenever the user shows interest in a specific product.",
-            expects_response: false,
+            description: "Send a clickable product link to the user when they want to see, learn about, or buy a product. You MUST use this tool whenever the user shows interest in a specific product. Always provide the full product URL and the product name.",
             parameters: {
               type: "object",
               properties: {
-                url: { type: "string", description: "The product page URL" },
+                url: { type: "string", description: "The full product page URL" },
                 product_name: { type: "string", description: "Name of the product" },
               },
               required: ["url", "product_name"],
